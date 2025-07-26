@@ -3,10 +3,12 @@
 import { Slider } from '@/components/ui/slider';
 import { useState } from 'react';
 import { cn } from "@/lib/utils"
+import { Checkbox } from './Checkbox';
 
 function ImageUploadEdit() {
   const [image, setImage] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [isCheckedColor, setIsCheckedColor] = useState(false);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -89,6 +91,10 @@ function ImageUploadEdit() {
               step={1}
               className="p-4"
             />
+          </div>
+          <div className="flex items-center gap-2 mt-2">
+            <Checkbox checked={isCheckedColor} onChange={() => setIsCheckedColor(!isCheckedColor)}/>
+            <span>color</span>
           </div>
         </div>
       )}
