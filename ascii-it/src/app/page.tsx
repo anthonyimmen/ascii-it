@@ -1,5 +1,5 @@
 import Image from 'next/image';
-import ImageUploadEdit from './components/ImageUpload';
+import ImageUploadEdit from './components/ImageUploadEdit';
 
 export default function Home() {
   return (
