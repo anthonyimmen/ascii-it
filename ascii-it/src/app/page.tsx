@@ -1,4 +1,5 @@
 import Image from 'next/image';
+import ImageUploadEdit from './components/ImageUpload';
 
 export default function Home() {
   return (
@@ -28,16 +29,10 @@ export default function Home() {
           priority
         />
       </div>
-      <input
-        type="file"
-        style={{
-          marginTop: '2rem',
-          fontSize: '1rem',
-          padding: '0.5rem 1rem',
-          width: '100%',
-          maxWidth: 320,
-        }}
-      />
+      <p style={{ margin: '1rem', fontSize: '1.2rem', padding: '1rem', textAlign: 'center' }}>
+        literally just ascii it. convert an image to ascii art.
+      </p>
+      <ImageUploadEdit />
     </div>
   );
 }
