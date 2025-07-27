@@ -29,7 +29,7 @@ export default function Home() {
           priority
         />
       </div>
-      <p style={{ margin: '1rem', fontSize: '1.2rem', padding: '1rem', textAlign: 'center' }}>
+      <p style={{ margin: '1rem', fontSize: '1rem', padding: '1rem', textAlign: 'center' }}>
         literally just ascii it. convert an image to ascii art.
       </p>
       <ImageUploadEdit />

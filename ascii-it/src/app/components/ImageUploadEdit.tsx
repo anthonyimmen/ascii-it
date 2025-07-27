@@ -9,6 +9,7 @@ function ImageUploadEdit() {
   const [image, setImage] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isCheckedColor, setIsCheckedColor] = useState(false);
+  const [isCheckedTwitterBanner, setIsCheckedTwitterBanner] = useState(false);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -26,21 +27,23 @@ function ImageUploadEdit() {
     <div 
       style={{
         display: 'flex',
-        flexDirection: 'row-reverse',
-        justifyContent: 'start',
-        alignItems: 'start',
+        flexDirection: 'column',
+        justifyContent: 'center',
+        alignItems: 'center',
         gap: '1rem',
       }}
     >
       {/* Custom Upload Button */}
+
       <label
         htmlFor="image-upload"
-        className="cursor-pointer px-4 py-4 text-white rounded-md transition justify-start"
+        className="cursor-pointer px-2 py-0 text-white rounded-md transition flex flex-row items-center justify-center gap-4 mb-1"
       >
+        <span className="text-md">upload image</span>
         <img
           src="/upload.svg"
           alt="Upload icon"
-          className="w-10 h-10 "
+          className="w-8 h-8"
         />
       </label>
 
@@ -56,14 +59,16 @@ function ImageUploadEdit() {
       {/* Preview */}
       {previewUrl && (
         <div>
-          <div className="flex flex-col-reverse gap-2">
-            <span className="text-sm text-gray-400">Selected File: {image?.name}</span>
-            <span className="text-sm text-gray-400">File Size: {image ? Math.round(image.size / 1024 / 100 * 100) : 0} MB</span>
+          <div className="flex flex-col-reverse justify-center items-center align-center gap-2">
             <img
               src={previewUrl}
               alt="Selected preview"
-              className="max-w-[300px] max-h-[200px] border border-gray-400 rounded"
+              className="max-w-[400px] max-h-[300px] border border-gray-400 rounded"
             />
+          </div>
+          <div className='flex flex-col gap-2 mt-4'>
+            <span className="text-sm text-gray-400">Selected File: {image?.name}</span>
+            <span className="text-sm text-gray-400">File Size: {image ? Math.round(image.size / 1024 / 1024) : 0} MB</span>
           </div>
           <div className="flex items-center gap-2 mt-2">
             <span>density: </span>
@@ -92,10 +97,27 @@ function ImageUploadEdit() {
               className="p-4"
             />
           </div>
-          <div className="flex items-center gap-2 mt-2">
-            <Checkbox checked={isCheckedColor} onChange={() => setIsCheckedColor(!isCheckedColor)}/>
-            <span>color</span>
+          <div className="flex items-center gap-4 mt-2">
+            <div className="flex items-center gap-2 mt-2">
+              <Checkbox checked={isCheckedColor} onChange={() => setIsCheckedColor(!isCheckedColor)}/>
+              <span>color?</span>
+            </div>
+            <div className="flex items-center gap-2 mt-2">
+              <Checkbox checked={isCheckedTwitterBanner} onChange={() => setIsCheckedTwitterBanner(!isCheckedTwitterBanner)}/>
+              <span>twitter banner size?</span>
+            </div>
           </div>
+          <label
+            htmlFor="image-generate"
+            className="cursor-pointer px-2 py-2 text-white rounded-md transition flex flex-row items-center justify-center gap-2 m-4"
+          >
+            <span className="text-md">generate</span>
+            <img
+              src="/gen.svg"
+              alt="Generate icon"
+              className="w-4 h-4"
+            />
+          </label>
         </div>
       )}
     </div>
