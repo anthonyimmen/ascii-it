@@ -254,7 +254,7 @@ function ImageUploadEdit() {
                 left: `${cropArea.x}px`,
                 top: `${cropArea.y}px`,
                 width: `${cropArea.width - 4}px`, // minus 4 to account for border
-                height: `${cropArea.height}px`,
+                height: `${cropArea.height - 4}px`,
               }}
               onMouseDown={(e) => handleMouseDown(e, 'move')}
             >
