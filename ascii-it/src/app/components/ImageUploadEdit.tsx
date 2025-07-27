@@ -13,7 +13,7 @@ function ImageUploadEdit() {
   const [isCheckedTwitterBanner, setIsCheckedTwitterBanner] = useState(false);
 
   // Crop tool states
-  const [cropArea, setCropArea] = useState({ x: 50, y: 50, width: 200, height: 150 });
+  const [cropArea, setCropArea] = useState({ x: 0, y: 0, width: 500, height: 500 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragHandle, setDragHandle] = useState<string | null>(null);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
@@ -29,7 +29,7 @@ function ImageUploadEdit() {
       setCroppedImageUrl(null);
       setShowCropTool(true);
       // Reset crop area when new image is loaded
-      setCropArea({ x: 50, y: 50, width: 200, height: 150 });
+      setCropArea({ x: 0, y: 0, width: 500, height: 500 });
     } else {
       setImage(null);
       setPreviewUrl(null);
@@ -136,6 +136,14 @@ function ImageUploadEdit() {
     }
   }, [isDragging, handleMouseMove, handleMouseUp]);
 
+  useEffect(() => {
+    if (isCheckedTwitterBanner) {
+      setCropArea({ x: 0, y: 166.67, width: 500, height: 166.67 })
+    } else {
+      setCropArea({x: 0, y: 0, width: 500, height: 500})
+    }
+  }, [isCheckedTwitterBanner])
+
   const applyCrop = () => {
     if (!previewUrl) return;
 
@@ -145,8 +153,8 @@ function ImageUploadEdit() {
 
     img.onload = () => {
       // Calculate scale factors
-      const scaleX = img.width / 400;
-      const scaleY = img.height / 300;
+      const scaleX = img.width / 500;
+      const scaleY = img.height / 500;
 
       canvas.width = cropArea.width * scaleX;
       canvas.height = cropArea.height * scaleY;
@@ -222,16 +230,20 @@ function ImageUploadEdit() {
       {/* Crop Tool */}
       {showCropTool && previewUrl && (
         <div className="flex flex-col items-center gap-4">
-          <h3 className="text-lg font-semibold text-white">Crop Your Image</h3>
+          <h3 className="text-md text-white">crop?</h3>
           <div 
             ref={containerRef}
-            className="relative inline-block border-2 border-gray-400"
-            style={{ width: '400px', height: '300px' }}
+            className="relative flex items-center justify-center border-2 border-gray-400"
+            style={{ width: '500px', height: '500px' }}
           >
             <img
               src={previewUrl}
               alt="Crop preview"
-              className="w-full h-full object-cover"
+              style={{
+                width: '500px',
+                height: '496px',
+                objectFit: 'contain'
+              }}
               draggable={false}
             />
             
@@ -241,8 +253,8 @@ function ImageUploadEdit() {
               style={{
                 left: `${cropArea.x}px`,
                 top: `${cropArea.y}px`,
-                width: `${cropArea.width}px`,
-                height: `${cropArea.height}px`
+                width: `${cropArea.width - 4}px`, // minus 4 to account for border
+                height: `${cropArea.height}px`,
               }}
               onMouseDown={(e) => handleMouseDown(e, 'move')}
             >
@@ -284,19 +296,25 @@ function ImageUploadEdit() {
             </div>
           </div>
 
-          <div className="flex gap-4">
-            <button
-              onClick={applyCrop}
-              className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
-            >
-              Apply Crop
-            </button>
-            <button
-              onClick={() => setShowCropTool(false)}
-              className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors"
-            >
-              Skip Crop
-            </button>
+          <div className="flex flex-col gap-4">
+            <div className="flex items-center justify-center gap-2 mt-2">
+              <Checkbox checked={isCheckedTwitterBanner} onChange={() => setIsCheckedTwitterBanner(!isCheckedTwitterBanner)}/>
+              <span>twitter banner size?</span>
+            </div>
+            <div className='flex gap-4'>
+              <button
+                onClick={() => setShowCropTool(false)}
+                className="cursor-pointer px-4 py-2 text-white rounded"
+              >
+                Skip Crop
+              </button>
+              <button
+                onClick={applyCrop}
+                className="cursor-pointer px-4 py-2 text-white rounded"
+              >
+                Apply Crop
+              </button>
+            </div>
           </div>
           
           <div className="text-sm text-gray-400">
@@ -314,14 +332,6 @@ function ImageUploadEdit() {
               alt="Selected preview"
               className="max-w-[400px] max-h-[300px] border border-gray-400 rounded"
             />
-            {croppedImageUrl && (
-              <button
-                onClick={resetCrop}
-                className="px-3 py-1 text-sm bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors"
-              >
-                Recrop Image
-              </button>
-            )}
           </div>
           <div className='flex flex-col gap-2 mt-4'>
             <span className="text-sm text-gray-400">Selected File: {image?.name}</span>
@@ -359,22 +369,33 @@ function ImageUploadEdit() {
               <Checkbox checked={isCheckedColor} onChange={() => setIsCheckedColor(!isCheckedColor)}/>
               <span>color?</span>
             </div>
-            <div className="flex items-center gap-2 mt-2">
-              <Checkbox checked={isCheckedTwitterBanner} onChange={() => setIsCheckedTwitterBanner(!isCheckedTwitterBanner)}/>
-              <span>twitter banner size?</span>
-            </div>
           </div>
-          <label
-            htmlFor="image-generate"
-            className="cursor-pointer px-2 py-2 text-white rounded-md transition flex flex-row items-center justify-center gap-2 m-4"
-          >
-            <span className="text-md">generate</span>
-            <img
-              src="/gen.svg"
-              alt="Generate icon"
-              className="w-4 h-4"
-            />
-          </label>
+          <div className='flex flex-row justify-center items-center'>
+            {croppedImageUrl && (
+                <button
+                  onClick={resetCrop}
+                  className="cursor-pointer px-2 py-2 text-md transition text-white rounded-md gap-2 m-4 flex flex-row items-center justify-center"
+                > 
+                  <img
+                    src="/back.svg"
+                    alt="Back icon"
+                    className="w-4 h-4"
+                  />
+                  <span className="text-md">re-crop</span>
+                </button>
+              )}
+            <label
+              htmlFor="image-generate"
+              className="cursor-pointer px-2 py-2 text-white rounded-md transition flex flex-row items-center justify-center gap-2 m-4"
+            >
+              <span className="text-md">generate</span>
+              <img
+                src="/gen.svg"
+                alt="Generate icon"
+                className="w-4 h-4"
+              />
+            </label>
+          </div>
         </div>
       )}
     </div>
