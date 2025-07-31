@@ -334,6 +334,10 @@ function ImageUploadEdit() {
               <Checkbox checked={isCheckedColor} onChange={() => setIsCheckedColor(!isCheckedColor)}/>
               <span>color?</span>
             </div>
+            <div className="flex items-center gap-2 mt-2">
+              <Checkbox checked={isCheckedTwitterBanner} onChange={() => setIsCheckedTwitterBanner(!isCheckedTwitterBanner)}/>
+              <span>twitter banner?</span>
+            </div>
           </div>
           <div className='flex flex-row justify-center items-center gap-4 mt-4'>
             <label
