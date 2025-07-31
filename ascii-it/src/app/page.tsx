@@ -5,13 +5,14 @@ export default function Home() {
   return (
     <div
       style={{
-        minHeight: '100vh',
+        height: "100vh",
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'center',
         alignItems: 'center',
         background: 'var(--background)',
         color: 'var(--foreground)',
+        padding: "4rem"
       }}
     >
       <div style={{ width: '100%', maxWidth: 320, display: 'flex', justifyContent: 'center' }}>

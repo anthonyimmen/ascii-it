@@ -7,18 +7,19 @@ import { Checkbox } from './Checkbox';
 function ImageUploadEdit() {
   const [image, setImage] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [croppedImageUrl, setCroppedImageUrl] = useState<string | null>(null);
-  const [showCropTool, setShowCropTool] = useState(false);
   const [isCheckedColor, setIsCheckedColor] = useState(false);
   const [isCheckedTwitterBanner, setIsCheckedTwitterBanner] = useState(false);
-
-  // Crop tool states
-  const [cropArea, setCropArea] = useState({ x: 0, y: 0, width: 500, height: 500 });
+  
+  // Zoom and pan state
+  const [zoom, setZoom] = useState(1);
+  const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
-  const [dragHandle, setDragHandle] = useState<string | null>(null);
+  const [lastTouchDistance, setLastTouchDistance] = useState(0);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
-  const [initialCrop, setInitialCrop] = useState<any>(null);
+  
+  const imageRef = useRef<HTMLImageElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -26,174 +27,174 @@ function ImageUploadEdit() {
     if (file && file.type.startsWith('image/')) {
       setImage(file);
       setPreviewUrl(URL.createObjectURL(file));
-      setCroppedImageUrl(null);
-      setShowCropTool(true);
-      // Reset crop area when new image is loaded
-      setCropArea({ x: 0, y: 0, width: 500, height: 500 });
+      // Reset zoom and pan when new image is loaded
+      setZoom(1);
+      setPan({ x: 0, y: 0 });
     } else {
       setImage(null);
       setPreviewUrl(null);
-      setCroppedImageUrl(null);
-      setShowCropTool(false);
     }
   };
 
-  const getMousePosition = (e: React.MouseEvent) => {
-    if (!containerRef.current) return { x: 0, y: 0 };
-    const rect = containerRef.current.getBoundingClientRect();
-    return {
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top
-    };
+  // Calculate distance between two touch points
+  const getTouchDistance = (touches: TouchList) => {
+    if (touches.length < 2) return 0;
+    const touch1 = touches[0];
+    const touch2 = touches[1];
+    return Math.sqrt(
+      Math.pow(touch2.clientX - touch1.clientX, 2) +
+      Math.pow(touch2.clientY - touch1.clientY, 2)
+    );
   };
 
-  const handleMouseDown = (e: React.MouseEvent, handle: string) => {
+  // Handle touch start
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
     e.preventDefault();
-    setIsDragging(true);
-    setDragHandle(handle);
-    setDragStart(getMousePosition(e));
-    setInitialCrop({ ...cropArea });
-  };
-
-  const handleMouseMove = useCallback((e: MouseEvent) => {
-    if (!isDragging || !dragHandle || !initialCrop || !containerRef.current) return;
-
-    const rect = containerRef.current.getBoundingClientRect();
-    const containerWidth = rect.width;
-    const containerHeight = rect.height;
     
-    const currentPos = {
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top
-    };
-    const deltaX = currentPos.x - dragStart.x;
-    const deltaY = currentPos.y - dragStart.y;
-
-    let newCrop = { ...initialCrop };
-
-    switch (dragHandle) {
-      case 'move':
-        newCrop.x = Math.max(0, Math.min(containerWidth - newCrop.width, initialCrop.x + deltaX));
-        newCrop.y = Math.max(0, Math.min(containerHeight - newCrop.height, initialCrop.y + deltaY));
-        break;
-      case 'nw':
-        newCrop.x = Math.max(0, Math.min(initialCrop.x + initialCrop.width - 20, initialCrop.x + deltaX));
-        newCrop.y = Math.max(0, Math.min(initialCrop.y + initialCrop.height - 20, initialCrop.y + deltaY));
-        newCrop.width = initialCrop.width - (newCrop.x - initialCrop.x);
-        newCrop.height = initialCrop.height - (newCrop.y - initialCrop.y);
-        break;
-      case 'ne':
-        newCrop.y = Math.max(0, Math.min(initialCrop.y + initialCrop.height - 20, initialCrop.y + deltaY));
-        newCrop.width = Math.max(20, Math.min(containerWidth - initialCrop.x, initialCrop.width + deltaX));
-        newCrop.height = initialCrop.height - (newCrop.y - initialCrop.y);
-        break;
-      case 'sw':
-        newCrop.x = Math.max(0, Math.min(initialCrop.x + initialCrop.width - 20, initialCrop.x + deltaX));
-        newCrop.width = initialCrop.width - (newCrop.x - initialCrop.x);
-        newCrop.height = Math.max(20, Math.min(containerHeight - initialCrop.y, initialCrop.height + deltaY));
-        break;
-      case 'se':
-        newCrop.width = Math.max(20, Math.min(containerWidth - initialCrop.x, initialCrop.width + deltaX));
-        newCrop.height = Math.max(20, Math.min(containerHeight - initialCrop.y, initialCrop.height + deltaY));
-        break;
-      case 'n':
-        newCrop.y = Math.max(0, Math.min(initialCrop.y + initialCrop.height - 20, initialCrop.y + deltaY));
-        newCrop.height = initialCrop.height - (newCrop.y - initialCrop.y);
-        break;
-      case 's':
-        newCrop.height = Math.max(20, Math.min(containerHeight - initialCrop.y, initialCrop.height + deltaY));
-        break;
-      case 'w':
-        newCrop.x = Math.max(0, Math.min(initialCrop.x + initialCrop.width - 20, initialCrop.x + deltaX));
-        newCrop.width = initialCrop.width - (newCrop.x - initialCrop.x);
-        break;
-      case 'e':
-        newCrop.width = Math.max(20, Math.min(containerWidth - initialCrop.x, initialCrop.width + deltaX));
-        break;
+    if (e.touches.length === 2) {
+      // Pinch gesture
+      const distance = getTouchDistance(e.touches);
+      setLastTouchDistance(distance);
+    } else if (e.touches.length === 1) {
+      // Pan gesture
+      const touch = e.touches[0];
+      setIsDragging(true);
+      setDragStart({ x: touch.clientX - pan.x, y: touch.clientY - pan.y });
     }
+  }, [pan]);
 
-    // Final boundary check to ensure crop area stays within container
-    newCrop.width = Math.min(newCrop.width, containerWidth - newCrop.x);
-    newCrop.height = Math.min(newCrop.height, containerHeight - newCrop.y);
+  // Handle touch move
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    e.preventDefault();
+    
+    if (e.touches.length === 2) {
+      // Pinch zoom
+      const distance = getTouchDistance(e.touches);
+      if (lastTouchDistance > 0) {
+        const scale = distance / lastTouchDistance;
+        const newZoom = Math.min(Math.max(zoom * scale, 0.5), 5);
+        setZoom(newZoom);
+      }
+      setLastTouchDistance(distance);
+    } else if (e.touches.length === 1 && isDragging) {
+      // Pan
+      const touch = e.touches[0];
+      setPan({
+        x: touch.clientX - dragStart.x,
+        y: touch.clientY - dragStart.y
+      });
+    }
+  }, [zoom, lastTouchDistance, isDragging, dragStart]);
 
-    setCropArea(newCrop);
-  }, [isDragging, dragHandle, dragStart, initialCrop]);
+  // Handle touch end
+  const handleTouchEnd = useCallback(() => {
+    setIsDragging(false);
+    setLastTouchDistance(0);
+  }, []);
+
+  // Handle mouse wheel for desktop zoom
+  const handleWheel = useCallback((e: React.WheelEvent) => {
+    e.preventDefault();
+    const delta = e.deltaY;
+    const scale = delta > 0 ? 0.9 : 1.1;
+    const newZoom = Math.min(Math.max(zoom * scale, 0.5), 5);
+    setZoom(newZoom);
+  }, [zoom]);
+
+  // Handle mouse events for desktop pan
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    setIsDragging(true);
+    setDragStart({ x: e.clientX - pan.x, y: e.clientY - pan.y });
+  }, [pan]);
+
+  const handleMouseMove = useCallback((e: React.MouseEvent) => {
+    if (isDragging) {
+      setPan({
+        x: e.clientX - dragStart.x,
+        y: e.clientY - dragStart.y
+      });
+    }
+  }, [isDragging, dragStart]);
 
   const handleMouseUp = useCallback(() => {
     setIsDragging(false);
-    setDragHandle(null);
-    setInitialCrop(null);
   }, []);
 
-  useEffect(() => {
-    if (isDragging) {
-      document.addEventListener('mousemove', handleMouseMove);
-      document.addEventListener('mouseup', handleMouseUp);
-      return () => {
-        document.removeEventListener('mousemove', handleMouseMove);
-        document.removeEventListener('mouseup', handleMouseUp);
-      };
-    }
-  }, [isDragging, handleMouseMove, handleMouseUp]);
+  // Reset zoom and pan
+  const resetZoom = () => {
+    setZoom(1);
+    setPan({ x: 0, y: 0 });
+  };
 
-  useEffect(() => {
-    if (isCheckedTwitterBanner) {
-      setCropArea({ x: 0, y: 166.67, width: 500, height: 166.67 })
-    } else {
-      setCropArea({x: 0, y: 0, width: 500, height: 500})
-    }
-  }, [isCheckedTwitterBanner])
+  // Download the current view of the image
+  const downloadImage = useCallback(() => {
+    if (!imageRef.current || !canvasRef.current || !previewUrl) return;
 
-  const applyCrop = () => {
-    if (!previewUrl) return;
-
-    const canvas = document.createElement('canvas');
+    const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
-    const img = new Image();
+    if (!ctx) return;
 
-    img.onload = () => {
-      // Calculate scale factors
-      const scaleX = img.width / 500;
-      const scaleY = img.height / 500;
+    const img = imageRef.current;
+    const container = containerRef.current;
+    if (!container) return;
+    
+    // Set canvas size to match the container
+    canvas.width = 400;
+    canvas.height = 400;
 
-      canvas.width = cropArea.width * scaleX;
-      canvas.height = cropArea.height * scaleY;
+    // Clear canvas with same background as container
+    ctx.fillStyle = '#222222';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      ctx?.drawImage(
-        img,
-        cropArea.x * scaleX,
-        cropArea.y * scaleY,
-        cropArea.width * scaleX,
-        cropArea.height * scaleY,
-        0,
-        0,
-        canvas.width,
-        canvas.height
-      );
+    // Calculate the display size of the image in the container
+    // The image is displayed with object-contain, so we need to calculate its actual rendered size
+    const containerWidth = 400;
+    const containerHeight = 400;
+    const imageAspectRatio = img.naturalWidth / img.naturalHeight;
+    const containerAspectRatio = containerWidth / containerHeight;
 
-      const croppedDataUrl = canvas.toDataURL();
-      setCroppedImageUrl(croppedDataUrl);
-      setShowCropTool(false);
-    };
+    let displayWidth, displayHeight;
+    
+    if (imageAspectRatio > containerAspectRatio) {
+      // Image is wider than container
+      displayWidth = containerWidth;
+      displayHeight = containerWidth / imageAspectRatio;
+    } else {
+      // Image is taller than container
+      displayHeight = containerHeight;
+      displayWidth = containerHeight * imageAspectRatio;
+    }
 
-    img.src = previewUrl;
-  };
+    // Apply zoom to the display dimensions
+    const zoomedWidth = displayWidth * zoom;
+    const zoomedHeight = displayHeight * zoom;
 
-  const resetCrop = () => {
-    setCroppedImageUrl(null);
-    setShowCropTool(true);
-  };
+    // Calculate the position - image is centered by default, then pan is applied
+    const centerX = containerWidth / 2;
+    const centerY = containerHeight / 2;
+    
+    const x = centerX - zoomedWidth / 2 + pan.x;
+    const y = centerY - zoomedHeight / 2 + pan.y;
 
-  const handleStyle: React.CSSProperties = {
-    position: 'absolute',
-    width: '8px',
-    height: '8px',
-    backgroundColor: '#3b82f6',
-    border: '1px solid white',
-    cursor: 'grab'
-  };
+    // Draw the image exactly as it appears in the container
+    ctx.drawImage(img, x, y, zoomedWidth, zoomedHeight);
 
-  const displayImageUrl = croppedImageUrl || previewUrl;
+    // Download the canvas as an image
+    canvas.toBlob((blob) => {
+      if (blob) {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `edited-${image?.name || 'image.png'}`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }
+    }, 'image/png');
+  }, [previewUrl, zoom, pan, image]);
+
+  const displayImageUrl = previewUrl;
 
   return (
     <div 
@@ -205,18 +206,23 @@ function ImageUploadEdit() {
         gap: '1rem',
       }}
     >
+      {/* Hidden canvas for downloading */}
+      <canvas ref={canvasRef} style={{ display: 'none' }} />
+      
       {/* Custom Upload Button */}
-      <label
-        htmlFor="image-upload"
-        className="cursor-pointer px-2 py-0 text-white rounded-md transition flex flex-row items-center justify-center gap-4 mb-1"
-      >
-        <span className="text-md">upload image</span>
-        <img
-          src="/upload.svg"
-          alt="Upload icon"
-          className="w-8 h-8"
-        />
-      </label>
+      {!displayImageUrl && 
+        <label
+          htmlFor="image-upload"
+          className="cursor-pointer px-2 py-0 text-white rounded-md transition flex flex-row items-center justify-center gap-4 mb-1"
+        >
+          <span className="text-md">upload</span>
+          <img
+            src="/upload.svg"
+            alt="Upload icon"
+            className="w-8 h-8"
+          />
+        </label>
+      }
 
       {/* Hidden File Input */}
       <input
@@ -227,117 +233,76 @@ function ImageUploadEdit() {
         onChange={handleFileChange}
       />
 
-      {/* Crop Tool */}
-      {showCropTool && previewUrl && (
-        <div className="flex flex-col items-center gap-4">
-          <h3 className="text-md text-white">crop?</h3>
-          <div 
-            ref={containerRef}
-            className="relative flex items-center justify-center border-2 border-gray-400"
-            style={{ width: '500px', height: '500px' }}
-          >
-            <img
-              src={previewUrl}
-              alt="Crop preview"
-              style={{
-                width: '500px',
-                height: '496px',
-                objectFit: 'contain'
-              }}
-              draggable={false}
-            />
-            
-            {/* Crop overlay */}
-            <div
-              className="absolute border-2 border-gray-400 bg-opacity-10 cursor-move"
-              style={{
-                left: `${cropArea.x}px`,
-                top: `${cropArea.y}px`,
-                width: `${cropArea.width - 4}px`, // minus 4 to account for border
-                height: `${cropArea.height - 4}px`,
-              }}
-              onMouseDown={(e) => handleMouseDown(e, 'move')}
-            >
-              {/* Corner handles */}
-              <div
-                style={{ ...handleStyle, left: '-4px', top: '-4px', cursor: 'nw-resize' }}
-                onMouseDown={(e) => { e.stopPropagation(); handleMouseDown(e, 'nw'); }}
-              />
-              <div
-                style={{ ...handleStyle, right: '-4px', top: '-4px', cursor: 'ne-resize' }}
-                onMouseDown={(e) => { e.stopPropagation(); handleMouseDown(e, 'ne'); }}
-              />
-              <div
-                style={{ ...handleStyle, left: '-4px', bottom: '-4px', cursor: 'sw-resize' }}
-                onMouseDown={(e) => { e.stopPropagation(); handleMouseDown(e, 'sw'); }}
-              />
-              <div
-                style={{ ...handleStyle, right: '-4px', bottom: '-4px', cursor: 'se-resize' }}
-                onMouseDown={(e) => { e.stopPropagation(); handleMouseDown(e, 'se'); }}
-              />
-              
-              {/* Edge handles */}
-              <div
-                style={{ ...handleStyle, left: '50%', top: '-4px', transform: 'translateX(-50%)', cursor: 'n-resize' }}
-                onMouseDown={(e) => { e.stopPropagation(); handleMouseDown(e, 'n'); }}
-              />
-              <div
-                style={{ ...handleStyle, left: '50%', bottom: '-4px', transform: 'translateX(-50%)', cursor: 's-resize' }}
-                onMouseDown={(e) => { e.stopPropagation(); handleMouseDown(e, 's'); }}
-              />
-              <div
-                style={{ ...handleStyle, left: '-4px', top: '50%', transform: 'translateY(-50%)', cursor: 'w-resize' }}
-                onMouseDown={(e) => { e.stopPropagation(); handleMouseDown(e, 'w'); }}
-              />
-              <div
-                style={{ ...handleStyle, right: '-4px', top: '50%', transform: 'translateY(-50%)', cursor: 'e-resize' }}
-                onMouseDown={(e) => { e.stopPropagation(); handleMouseDown(e, 'e'); }}
-              />
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-4">
-            <div className="flex items-center justify-center gap-2 mt-2">
-              <Checkbox checked={isCheckedTwitterBanner} onChange={() => setIsCheckedTwitterBanner(!isCheckedTwitterBanner)}/>
-              <span>twitter banner size?</span>
-            </div>
-            <div className='flex gap-4'>
-              <button
-                onClick={() => setShowCropTool(false)}
-                className="cursor-pointer px-4 py-2 text-white rounded"
-              >
-                Skip Crop
-              </button>
-              <button
-                onClick={applyCrop}
-                className="cursor-pointer px-4 py-2 text-white rounded"
-              >
-                Apply Crop
-              </button>
-            </div>
-          </div>
-          
-          <div className="text-sm text-gray-400">
-            Crop Size: {Math.round(cropArea.width)} × {Math.round(cropArea.height)}
-          </div>
-        </div>
-      )}
-
       {/* Preview and Controls */}
-      {displayImageUrl && !showCropTool && (
+      {displayImageUrl && (
         <div>
           <div className="flex flex-col-reverse justify-center items-center align-center gap-2">
-            <img
-              src={displayImageUrl}
-              alt="Selected preview"
-              className="max-w-[400px] max-h-[300px] border border-gray-400 rounded"
-            />
+            <div
+              ref={containerRef}
+              className="relative overflow-hidden"
+              style={{
+                backgroundColor: "#222222",
+                width: "400px",
+                height: "400px",
+                borderRadius: 3,
+                border: "solid white .25px",
+                cursor: isDragging ? 'grabbing' : 'grab',
+                touchAction: 'none'
+              }}
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
+              onWheel={handleWheel}
+              onMouseDown={handleMouseDown}
+              onMouseMove={handleMouseMove}
+              onMouseUp={handleMouseUp}
+              onMouseLeave={handleMouseUp}
+            >
+              <img
+                ref={imageRef}
+                src={displayImageUrl}
+                alt="Selected preview"
+                className="object-contain absolute top-1/2 left-1/2"
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  transform: `translate(-50%, -50%) translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
+                  transformOrigin: 'center',
+                  pointerEvents: 'none',
+                  userSelect: 'none'
+                }}
+                draggable={false}
+              />
+            </div>
           </div>
-          <div className='flex flex-col gap-2 mt-4'>
-            <span className="text-sm text-gray-400">Selected File: {image?.name}</span>
-            <span className="text-sm text-gray-400">File Size: {image ? Math.round(image.size / 1024 / 1024) : 0} MB</span>
+          <div className='flex justify-between items-center align-center mt-4' style={{width: "400px"}}>
+            <div className='flex flex-col gap-2 justify-center align-center'>
+              <span className="text-sm text-gray-400">File: {image?.name}</span>
+              <span className="text-sm text-gray-400">File Size: {image ? Math.round(image.size / 1024 / 1024) : 0} MB</span>
+            </div>
+            {/* Zoom controls */}
+            <div className="flex items-center gap-3" >
+              <button
+                onClick={() => setZoom(Math.min(zoom + 0.1, 5))}
+                className="px-2 py-1 text-white rounded text-lg"
+              >
+                +
+              </button>
+              <button
+                onClick={() => setZoom(Math.max(zoom - 0.1, 0.5))}
+                className="px-2 py-1 text-white rounded text-lg"
+              >
+                -
+              </button>
+              <button
+                onClick={resetZoom}
+                className="px-2 py-1 text-white rounded text-lg"
+              >
+                x
+              </button>
+            </div>
           </div>
-          <div className="flex items-center gap-2 mt-2">
+          <div className="flex items-center gap-2 mt-2" style={{width: "400px"}}>
             <span>density: </span>
             <Slider
               defaultValue={[50]}
@@ -370,23 +335,30 @@ function ImageUploadEdit() {
               <span>color?</span>
             </div>
           </div>
-          <div className='flex flex-row justify-center items-center'>
-            {croppedImageUrl && (
-                <button
-                  onClick={resetCrop}
-                  className="cursor-pointer px-2 py-2 text-md transition text-white rounded-md gap-2 m-4 flex flex-row items-center justify-center"
-                > 
-                  <img
-                    src="/back.svg"
-                    alt="Back icon"
-                    className="w-4 h-4"
-                  />
-                  <span className="text-md">re-crop</span>
-                </button>
-              )}
+          <div className='flex flex-row justify-center items-center gap-4 mt-4'>
+            <label
+              htmlFor="image-upload"
+              className="cursor-pointer px-2 py-2 text-white rounded-md transition flex flex-row items-center justify-center gap-2"
+            >
+              <span className="text-md">upload</span>
+              <img
+                src="/upload.svg"
+                alt="Upload icon"
+                className="w-4 h-4"
+              />
+            </label>
+            <button
+              onClick={downloadImage}
+              className="cursor-pointer px-2 py-2 text-white rounded-md transition flex flex-row items-center justify-center gap-2"
+            >
+              <span className="text-md">download</span>
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+            </button>
             <label
               htmlFor="image-generate"
-              className="cursor-pointer px-2 py-2 text-white rounded-md transition flex flex-row items-center justify-center gap-2 m-4"
+              className="cursor-pointer px-2 py-2 text-white rounded-md transition flex flex-row items-center justify-center gap-2"
             >
               <span className="text-md">generate</span>
               <img
