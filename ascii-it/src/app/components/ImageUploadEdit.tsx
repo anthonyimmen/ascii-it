@@ -47,37 +47,6 @@ function ImageUploadEdit() {
     );
   };
 
-  // Handle touch start
-  const handleTouchStart = useCallback((e: React.TouchEvent) => {
-    e.preventDefault();
-    
-    if (e.touches.length === 2) {
-      // Pinch gesture
-      const distance = getTouchDistance(e.touches);
-      setLastTouchDistance(distance);
-    } else if (e.touches.length === 1) {
-      // Pan gesture
-      const touch = e.touches[0];
-      setIsDragging(true);
-      setDragStart({ x: touch.clientX - pan.x, y: touch.clientY - pan.y });
-    }
-  }, [pan]);
-
-  // Handle touch end
-  const handleTouchEnd = useCallback(() => {
-    setIsDragging(false);
-    setLastTouchDistance(0);
-  }, []);
-
-  // Handle mouse wheel for desktop zoom
-  const handleWheel = useCallback((e: React.WheelEvent) => {
-    e.preventDefault();
-    const delta = e.deltaY;
-    const scale = delta > 0 ? 0.9 : 1.1;
-    const newZoom = Math.min(Math.max(zoom * scale, 0.5), 5);
-    setZoom(newZoom);
-  }, [zoom]);
-
   // Handle mouse events for desktop pan
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     setIsDragging(true);
@@ -239,9 +208,9 @@ function ImageUploadEdit() {
                 touchAction: 'none',
                 transition: 'width 0.4s cubic-bezier(.4,0,.2,1), height 0.4s cubic-bezier(.4,0,.2,1)' // <-- add this line
               }}
-              onTouchStart={handleTouchStart}
-              onTouchEnd={handleTouchEnd}
-              onWheel={handleWheel}
+              // onTouchStart={handleTouchStart}
+              // onTouchEnd={handleTouchEnd}
+              // onWheel={handleWheel}
               onMouseDown={handleMouseDown}
               onMouseMove={handleMouseMove}
               onMouseUp={handleMouseUp}
