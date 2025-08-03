@@ -206,11 +206,8 @@ function ImageUploadEdit() {
                 border: "solid white .25px",
                 cursor: isDragging ? 'grabbing' : 'grab',
                 touchAction: 'none',
-                transition: 'width 0.4s cubic-bezier(.4,0,.2,1), height 0.4s cubic-bezier(.4,0,.2,1)' // <-- add this line
+                transition: 'width 0.4s cubic-bezier(.4,0,.2,1), height 0.4s cubic-bezier(.4,0,.2,1)'
               }}
-              // onTouchStart={handleTouchStart}
-              // onTouchEnd={handleTouchEnd}
-              // onWheel={handleWheel}
               onMouseDown={handleMouseDown}
               onMouseMove={handleMouseMove}
               onMouseUp={handleMouseUp}
@@ -233,7 +230,7 @@ function ImageUploadEdit() {
               />
             </div>
           </div>
-          <div className='flex justify-between items-center align-center mt-4' style={{width: isCheckedTwitterBanner ? "500px" : "400px"}}>
+          <div className='flex justify-between items-center align-center mt-4' style={{width: isCheckedTwitterBanner ? "500px" : "400px", transition: 'width 0.4s cubic-bezier(.4,0,.2,1), height 0.4s cubic-bezier(.4,0,.2,1)'}}>
             <div className='flex flex-col gap-2 justify-center align-center'>
               <span className="text-sm text-gray-400">File: {image?.name}</span>
               <span className="text-sm text-gray-400">File Size: {image ? Math.round(image.size / 1024 / 1024) : 0} MB</span>
