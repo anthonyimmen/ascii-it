@@ -63,29 +63,6 @@ function ImageUploadEdit() {
     }
   }, [pan]);
 
-  // Handle touch move
-  const handleTouchMove = useCallback((e: React.TouchEvent) => {
-    e.preventDefault();
-    
-    if (e.touches.length === 2) {
-      // Pinch zoom
-      const distance = getTouchDistance(e.touches);
-      if (lastTouchDistance > 0) {
-        const scale = distance / lastTouchDistance;
-        const newZoom = Math.min(Math.max(zoom * scale, 0.5), 5);
-        setZoom(newZoom);
-      }
-      setLastTouchDistance(distance);
-    } else if (e.touches.length === 1 && isDragging) {
-      // Pan
-      const touch = e.touches[0];
-      setPan({
-        x: touch.clientX - dragStart.x,
-        y: touch.clientY - dragStart.y
-      });
-    }
-  }, [zoom, lastTouchDistance, isDragging, dragStart]);
-
   // Handle touch end
   const handleTouchEnd = useCallback(() => {
     setIsDragging(false);
@@ -142,42 +119,54 @@ function ImageUploadEdit() {
     canvas.width = isCheckedTwitterBanner ? 1500 : 400;
     canvas.height = isCheckedTwitterBanner ? 500 : 400;
 
+    // Get the actual display size of the container
+    const containerRect = container.getBoundingClientRect();
+    const displayContainerWidth = containerRect.width;
+    const displayContainerHeight = containerRect.height;
+
     // Clear canvas with same background as container
     ctx.fillStyle = '#222222';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     // Calculate the display size of the image in the container
-    // The image is displayed with object-contain, so we need to calculate its actual rendered size
-    const containerWidth = canvas.width;
-    const containerHeight = canvas.height;
     const imageAspectRatio = img.naturalWidth / img.naturalHeight;
-    const containerAspectRatio = containerWidth / containerHeight;
+    const containerAspectRatio = displayContainerWidth / displayContainerHeight;
 
     let displayWidth, displayHeight;
     
     if (imageAspectRatio > containerAspectRatio) {
       // Image is wider than container
-      displayWidth = containerWidth;
-      displayHeight = containerWidth / imageAspectRatio;
+      displayWidth = displayContainerWidth;
+      displayHeight = displayContainerWidth / imageAspectRatio;
     } else {
       // Image is taller than container
-      displayHeight = containerHeight;
-      displayWidth = containerHeight * imageAspectRatio;
+      displayHeight = displayContainerHeight;
+      displayWidth = displayContainerHeight * imageAspectRatio;
     }
 
     // Apply zoom to the display dimensions
     const zoomedWidth = displayWidth * zoom;
     const zoomedHeight = displayHeight * zoom;
 
+    // Calculate scale factors between display container and canvas
+    const scaleX = canvas.width / displayContainerWidth;
+    const scaleY = canvas.height / displayContainerHeight;
+
+    // Scale the zoomed dimensions and pan values for the canvas
+    const canvasZoomedWidth = zoomedWidth * scaleX;
+    const canvasZoomedHeight = zoomedHeight * scaleY;
+    const canvasPanX = pan.x * scaleX;
+    const canvasPanY = pan.y * scaleY;
+
     // Calculate the position - image is centered by default, then pan is applied
-    const centerX = containerWidth / 2;
-    const centerY = containerHeight / 2;
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
     
-    const x = centerX - zoomedWidth / 2 + pan.x;
-    const y = centerY - zoomedHeight / 2 + pan.y;
+    const x = centerX - canvasZoomedWidth / 2 + canvasPanX;
+    const y = centerY - canvasZoomedHeight / 2 + canvasPanY;
 
     // Draw the image exactly as it appears in the container
-    ctx.drawImage(img, x, y, zoomedWidth, zoomedHeight);
+    ctx.drawImage(img, x, y, canvasZoomedWidth, canvasZoomedHeight);
 
     // Download the canvas as an image
     canvas.toBlob((blob) => {
@@ -192,7 +181,7 @@ function ImageUploadEdit() {
         URL.revokeObjectURL(url);
       }
     }, 'image/png');
-  }, [previewUrl, zoom, pan, image]);
+  }, [previewUrl, zoom, pan, image, isCheckedTwitterBanner]);
 
   const displayImageUrl = previewUrl;
 
@@ -247,10 +236,10 @@ function ImageUploadEdit() {
                 borderRadius: 3,
                 border: "solid white .25px",
                 cursor: isDragging ? 'grabbing' : 'grab',
-                touchAction: 'none'
+                touchAction: 'none',
+                transition: 'width 0.4s cubic-bezier(.4,0,.2,1), height 0.4s cubic-bezier(.4,0,.2,1)' // <-- add this line
               }}
               onTouchStart={handleTouchStart}
-              onTouchMove={handleTouchMove}
               onTouchEnd={handleTouchEnd}
               onWheel={handleWheel}
               onMouseDown={handleMouseDown}
