@@ -5,22 +5,23 @@ export default function Home() {
   return (
     <div
       style={{
-        height: "100vh",
+        minHeight: "100vh",
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'center',
         alignItems: 'center',
         background: 'var(--background)',
         color: 'var(--foreground)',
-        padding: "4rem"
+        padding: "2rem",
+        overflow: "auto"
       }}
     >
       <div style={{ width: '100%', maxWidth: 320, display: 'flex', justifyContent: 'center' }}>
         <Image
           src="/logo.jpeg"
           alt="Logo"
-          width={320}
-          height={320}
+          width="320"
+          height="320"
           style={{
             width: '100%',
             height: 'auto',
