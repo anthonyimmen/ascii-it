@@ -139,8 +139,8 @@ function ImageUploadEdit() {
     if (!container) return;
     
     // Set canvas size to match the container
-    canvas.width = 400;
-    canvas.height = 400;
+    canvas.width = isCheckedTwitterBanner ? 1500 : 400;
+    canvas.height = isCheckedTwitterBanner ? 500 : 400;
 
     // Clear canvas with same background as container
     ctx.fillStyle = '#222222';
@@ -148,8 +148,8 @@ function ImageUploadEdit() {
 
     // Calculate the display size of the image in the container
     // The image is displayed with object-contain, so we need to calculate its actual rendered size
-    const containerWidth = 400;
-    const containerHeight = 400;
+    const containerWidth = canvas.width;
+    const containerHeight = canvas.height;
     const imageAspectRatio = img.naturalWidth / img.naturalHeight;
     const containerAspectRatio = containerWidth / containerHeight;
 
@@ -242,8 +242,8 @@ function ImageUploadEdit() {
               className="relative overflow-hidden"
               style={{
                 backgroundColor: "#222222",
-                width: "400px",
-                height: "400px",
+                width: isCheckedTwitterBanner ? "500px" : "400px",
+                height: isCheckedTwitterBanner ? "166.67px" : "400px",
                 borderRadius: 3,
                 border: "solid white .25px",
                 cursor: isDragging ? 'grabbing' : 'grab',
@@ -275,7 +275,7 @@ function ImageUploadEdit() {
               />
             </div>
           </div>
-          <div className='flex justify-between items-center align-center mt-4' style={{width: "400px"}}>
+          <div className='flex justify-between items-center align-center mt-4' style={{width: isCheckedTwitterBanner ? "500px" : "400px"}}>
             <div className='flex flex-col gap-2 justify-center align-center'>
               <span className="text-sm text-gray-400">File: {image?.name}</span>
               <span className="text-sm text-gray-400">File Size: {image ? Math.round(image.size / 1024 / 1024) : 0} MB</span>
