@@ -12,13 +12,14 @@ function ImageUploadEdit() {
   const [asciiPreviewUrl, setAsciiPreviewUrl] = useState<string | null>(null);
   const [isCheckedColor, setIsCheckedColor] = useState(false);
   const [isCheckedTwitterBanner, setIsCheckedTwitterBanner] = useState(false);
+  const [backgroundColor, setBackgroundColor] = useState("#222222");
   const [isGenerating, setIsGenerating] = useState(false);
+  const [viewOriginal, setViewOriginal] = useState(true); 
   
   // Zoom and pan state
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
-  const [lastTouchDistance, setLastTouchDistance] = useState(0);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   
   const imageRef = useRef<HTMLImageElement>(null);
@@ -69,17 +70,6 @@ function ImageUploadEdit() {
       setAsciiImage(null);
       setAsciiPreviewUrl(null);
     }
-  };
-
-  // Calculate distance between two touch points
-  const getTouchDistance = (touches: TouchList) => {
-    if (touches.length < 2) return 0;
-    const touch1 = touches[0];
-    const touch2 = touches[1];
-    return Math.sqrt(
-      Math.pow(touch2.clientX - touch1.clientX, 2) +
-      Math.pow(touch2.clientY - touch1.clientY, 2)
-    );
   };
 
   // Handle mouse events for desktop pan
@@ -192,8 +182,9 @@ function ImageUploadEdit() {
     
     setIsGenerating(true);
     try {
-      const asciiImageFile = await imageToAscii(2, isCheckedColor, true, image);
+      const asciiImageFile = await imageToAscii(0, isCheckedColor, true, image, backgroundColor);
       setAsciiImage(asciiImageFile);
+      setViewOriginal(false); // Switch to ASCII view after generation
     } catch (error) {
       console.error('Error converting to ASCII:', error);
     } finally {
@@ -202,8 +193,8 @@ function ImageUploadEdit() {
   };
 
   // Switch between original and ASCII image
-  const displayImageUrl = asciiPreviewUrl || previewUrl;
-  const displayFile = asciiImage || image;
+  const displayImageUrl = viewOriginal ? previewUrl : asciiPreviewUrl;
+  const displayFile = viewOriginal ? image : asciiImage;
 
   return (
     <div 
@@ -239,30 +230,17 @@ function ImageUploadEdit() {
         type="file"
         accept="image/*"
         className="hidden"
-        onChange={handleFileChange}
+        onChange={(e) => { 
+          handleFileChange(e); 
+          if (asciiPreviewUrl) {
+            setAsciiPreviewUrl(null) // fix issue with changing asciiPreviewUrl also effects previewUrl
+          }
+        }}
       />
 
       {/* Preview and Controls */}
       {displayImageUrl && (
         <div>
-          {/* Toggle between original and ASCII */}
-          {asciiPreviewUrl && (
-            <div className="flex gap-2 mb-2 justify-center">
-              <button
-                onClick={() => setAsciiPreviewUrl(null)}
-                className={`px-3 py-1 rounded text-sm ${!asciiPreviewUrl ? 'bg-white text-black' : 'bg-gray-600 text-white'}`}
-              >
-                Original
-              </button>
-              <button
-                onClick={() => setAsciiPreviewUrl(URL.createObjectURL(asciiImage!))}
-                className={`px-3 py-1 rounded text-sm ${asciiPreviewUrl ? 'bg-white text-black' : 'bg-gray-600 text-white'}`}
-              >
-                ASCII
-              </button>
-            </div>
-          )}
-
           <div className="flex flex-col-reverse justify-center items-center align-center gap-2">
             <div
               ref={containerRef}
@@ -306,28 +284,41 @@ function ImageUploadEdit() {
               {asciiImage && <span className="text-sm text-green-400">ASCII Generated ✓</span>}
             </div>
             {/* Zoom controls */}
-            <div className="flex items-center gap-3" >
-              <button
-                onClick={() => setZoom(Math.min(zoom + 0.1, 5))}
-                className="px-2 py-1 text-white rounded text-lg"
-              >
-                +
-              </button>
-              <button
-                onClick={() => setZoom(Math.max(zoom - 0.1, 0.5))}
-                className="px-2 py-1 text-white rounded text-lg"
-              >
-                -
-              </button>
-              <button
-                onClick={resetZoom}
-                className="px-2 py-1 text-white rounded text-lg"
-              >
-                x
-              </button>
+            <div className='flex flex-col-reverse flex-end gap-2 justify-center align-center'>
+              {/* Toggle between original and ASCII */}
+              {asciiPreviewUrl &&
+                <div className="flex gap-2 mb-2 justify-center">
+                  <button
+                    onClick={() => setViewOriginal(viewOriginal => !viewOriginal)}
+                    className={`px-1 py-1 text-sm text-white justify-end cursor-pointer`}
+                  >
+                    {viewOriginal ? "view ascii" : "view original"}
+                  </button>
+              </div>
+              }
+              <div className="flex items-center justify-end align-center gap-3" >
+                <button
+                  onClick={() => setZoom(Math.min(zoom + 0.1, 5))}
+                  className="px-2 py-1 text-white rounded text-lg"
+                >
+                  +
+                </button>
+                <button
+                  onClick={() => setZoom(Math.max(zoom - 0.1, 0.5))}
+                  className="px-2 py-1 text-white rounded text-lg"
+                >
+                  -
+                </button>
+                <button
+                  onClick={resetZoom}
+                  className="px-2 py-1 text-white rounded text-lg"
+                >
+                  x
+                </button>
+              </div>
             </div>
           </div>
-          <div className="flex items-center gap-2 mt-2" style={{width: "400px"}}>
+          <div className="flex items-center gap-2 mt-3">
             <span>density: </span>
             <Slider
               defaultValue={[50]}
@@ -336,7 +327,7 @@ function ImageUploadEdit() {
               className="p-4"
             />
           </div>
-          <div className="flex items-center gap-2 mt-2">
+          <div className="flex items-center gap-2 mt-3">
             <span>brightness: </span>
             <Slider
               defaultValue={[50]}
@@ -345,7 +336,7 @@ function ImageUploadEdit() {
               className="p-4"
             />
           </div>
-          <div className="flex items-center gap-2 mt-2">
+          <div className="flex items-center gap-2 mt-3">
             <span>font size: </span>
             <Slider
               defaultValue={[50]}
@@ -354,20 +345,31 @@ function ImageUploadEdit() {
               className="p-4"
             />
           </div>
-          <div className="flex items-center gap-4 mt-2">
+          <div className="flex items-center gap-1 mt-3">
+            <span>background: </span>
+            <input
+              type="text"
+              value={backgroundColor}
+              onChange={(e) => setBackgroundColor(e.target.value)}
+              className="px-2 py-1 text-white border-b-2 border-white text-sm flex-1 w-10"
+              placeholder="#222222"
+              pattern="^#[0-9A-Fa-f]{6}$"
+            />
+          </div>
+          <div className="flex items-center gap-4 mt-4">
             <div className="flex items-center gap-2 mt-2">
               <Checkbox checked={isCheckedColor} onChange={() => setIsCheckedColor(!isCheckedColor)}/>
               <span>color?</span>
             </div>
-            <div className="flex items-center gap-2 mt-2">
+            <div className="flex items-center gap-2 mt-3">
               <Checkbox checked={isCheckedTwitterBanner} onChange={() => setIsCheckedTwitterBanner(!isCheckedTwitterBanner)}/>
               <span>twitter banner?</span>
             </div>
           </div>
-          <div className='flex flex-row justify-center items-center gap-4 mt-4'>
+          <div className='flex flex-row justify-center items-center gap-4 mt-5'>
             <label
               htmlFor="image-upload"
-              className="cursor-pointer px-2 py-2 text-white rounded-md transition flex flex-row items-center justify-center gap-2"
+              className="cursor-pointer px-2 pb-1 text-white transition flex flex-row items-center justify-center gap-2 hover:border-b-2 hover:border-white"
             >
               <span className="text-md">upload</span>
               <img
@@ -378,7 +380,7 @@ function ImageUploadEdit() {
             </label>
             <button
               onClick={downloadImage}
-              className="cursor-pointer px-2 py-2 text-white rounded-md transition flex flex-row items-center justify-center gap-2"
+              className="cursor-pointer px-2 pb-1 text-white transition flex flex-row items-center justify-center gap-2 hover:border-b-2 hover:border-white"
             >
               <span className="text-md">download</span>
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -388,9 +390,9 @@ function ImageUploadEdit() {
             <button
               onClick={handleGenerateAscii}
               disabled={isGenerating}
-              className="cursor-pointer px-2 py-2 text-white rounded-md transition flex flex-row items-center justify-center gap-2 disabled:opacity-50"
+              className="cursor-pointer px-2 pb-1 text-white transition flex flex-row items-center justify-center gap-2 hover:border-b-2 hover:border-white disabled:opacity-50"
             >
-              <span className="text-md">{isGenerating ? 'generating...' : 'generate'}</span>
+              <span className="text-md">generate</span>
               <img
                 src="/gen.svg"
                 alt="Generate icon"

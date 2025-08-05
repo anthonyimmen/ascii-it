@@ -1,4 +1,4 @@
-export function imageToAscii(setType: number, color: boolean, brightness: boolean, image: File | null): Promise<File> {
+export function imageToAscii(setType: number, color: boolean, brightness: boolean, image: File | null, backgroundColor: string = "#222222"): Promise<File> {
   const characterSets = [
     ".:*-=+#",
     "⠁⠂⠃⠄⠅⠆⠇⠈⠉⠊⠋⠌⠍⠎⠏⠐⠑⠒⠓⠔⠕⠖⠗⠘⠙⠚⠛⠜⠝⠞⠟",
@@ -31,7 +31,6 @@ export function imageToAscii(setType: number, color: boolean, brightness: boolea
       
       // Get character set
       const chars = characterSets[setType] || characterSets[0];
-      const backgroundColor = "#222222";
       
       let asciiArt = '';
       
@@ -177,7 +176,7 @@ export function imageToAscii(setType: number, color: boolean, brightness: boolea
       // Convert canvas to blob and then to File
       htmlCanvas.toBlob((blob) => {
         if (blob) {
-          const fileName = `ascii-art-${Date.now()}.png`;
+          const fileName = `ascii-it-${image?.name || 'image.png'}`;
           const file = new File([blob], fileName, { type: 'image/png' });
           resolve(file);
         } else {
