@@ -281,16 +281,15 @@ function ImageUploadEdit() {
             <div className='flex flex-col gap-2 justify-center align-center'>
               <span className="text-sm text-gray-400">File: {displayFile?.name}</span>
               <span className="text-sm text-gray-400">File Size: {displayFile ? Math.round(displayFile.size / 1024 / 1024) : 0} MB</span>
-              {asciiImage && <span className="text-sm text-green-400">ASCII Generated ✓</span>}
             </div>
             {/* Zoom controls */}
             <div className='flex flex-col-reverse flex-end gap-2 justify-center align-center'>
               {/* Toggle between original and ASCII */}
               {asciiPreviewUrl &&
-                <div className="flex gap-2 mb-2 justify-center">
+                <div className="flex justify-center">
                   <button
                     onClick={() => setViewOriginal(viewOriginal => !viewOriginal)}
-                    className={`px-1 py-1 text-sm text-white justify-end cursor-pointer`}
+                    className={`px-1 text-sm text-white justify-end cursor-pointer`}
                   >
                     {viewOriginal ? "view ascii" : "view original"}
                   </button>
@@ -299,19 +298,19 @@ function ImageUploadEdit() {
               <div className="flex items-center justify-end align-center gap-3" >
                 <button
                   onClick={() => setZoom(Math.min(zoom + 0.1, 5))}
-                  className="px-2 py-1 text-white rounded text-lg"
+                  className="px-2 text-white rounded text-lg"
                 >
                   +
                 </button>
                 <button
                   onClick={() => setZoom(Math.max(zoom - 0.1, 0.5))}
-                  className="px-2 py-1 text-white rounded text-lg"
+                  className="px-2 text-white rounded text-lg"
                 >
                   -
                 </button>
                 <button
                   onClick={resetZoom}
-                  className="px-2 py-1 text-white rounded text-lg"
+                  className="px-2 text-white rounded text-lg"
                 >
                   x
                 </button>
