@@ -3,12 +3,16 @@
 import { Slider } from '@/components/ui/slider';
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { Checkbox } from './Checkbox';
+import { imageToAscii } from './ImageToAscii';
 
 function ImageUploadEdit() {
   const [image, setImage] = useState<File | null>(null);
+  const [asciiImage, setAsciiImage] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [asciiPreviewUrl, setAsciiPreviewUrl] = useState<string | null>(null);
   const [isCheckedColor, setIsCheckedColor] = useState(false);
   const [isCheckedTwitterBanner, setIsCheckedTwitterBanner] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
   
   // Zoom and pan state
   const [zoom, setZoom] = useState(1);
@@ -21,18 +25,49 @@ function ImageUploadEdit() {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
+  // Cleanup URLs on unmount to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+      if (asciiPreviewUrl) URL.revokeObjectURL(asciiPreviewUrl);
+    };
+  }, []);
+
+  // Create preview URL when asciiImage changes
+  useEffect(() => {
+    if (asciiImage) {
+      // Clean up previous URL
+      if (asciiPreviewUrl) {
+        URL.revokeObjectURL(asciiPreviewUrl);
+      }
+      // Create new URL for ASCII image
+      const newAsciiUrl = URL.createObjectURL(asciiImage);
+      setAsciiPreviewUrl(newAsciiUrl);
+    } else {
+      setAsciiPreviewUrl(null);
+    }
+  }, [asciiImage]);
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
 
     if (file && file.type.startsWith('image/')) {
+      // Clean up previous URLs
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+      if (asciiPreviewUrl) URL.revokeObjectURL(asciiPreviewUrl);
+      
       setImage(file);
       setPreviewUrl(URL.createObjectURL(file));
+      setAsciiImage(null); // Clear ASCII image when new image is uploaded
+      setAsciiPreviewUrl(null);
       // Reset zoom and pan when new image is loaded
       setZoom(1);
       setPan({ x: 0, y: 0 });
     } else {
       setImage(null);
       setPreviewUrl(null);
+      setAsciiImage(null);
+      setAsciiPreviewUrl(null);
     }
   };
 
@@ -74,7 +109,7 @@ function ImageUploadEdit() {
 
   // Download the current view of the image
   const downloadImage = useCallback(() => {
-    if (!imageRef.current || !canvasRef.current || !previewUrl) return;
+    if (!imageRef.current || !canvasRef.current || !displayImageUrl) return;
 
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
@@ -150,9 +185,25 @@ function ImageUploadEdit() {
         URL.revokeObjectURL(url);
       }
     }, 'image/png');
-  }, [previewUrl, zoom, pan, image, isCheckedTwitterBanner]);
+  }, [zoom, pan, image, isCheckedTwitterBanner]);
 
-  const displayImageUrl = previewUrl;
+  const handleGenerateAscii = async () => {
+    if (!image) return;
+    
+    setIsGenerating(true);
+    try {
+      const asciiImageFile = await imageToAscii(2, isCheckedColor, true, image);
+      setAsciiImage(asciiImageFile);
+    } catch (error) {
+      console.error('Error converting to ASCII:', error);
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  // Switch between original and ASCII image
+  const displayImageUrl = asciiPreviewUrl || previewUrl;
+  const displayFile = asciiImage || image;
 
   return (
     <div 
@@ -194,6 +245,24 @@ function ImageUploadEdit() {
       {/* Preview and Controls */}
       {displayImageUrl && (
         <div>
+          {/* Toggle between original and ASCII */}
+          {asciiPreviewUrl && (
+            <div className="flex gap-2 mb-2 justify-center">
+              <button
+                onClick={() => setAsciiPreviewUrl(null)}
+                className={`px-3 py-1 rounded text-sm ${!asciiPreviewUrl ? 'bg-white text-black' : 'bg-gray-600 text-white'}`}
+              >
+                Original
+              </button>
+              <button
+                onClick={() => setAsciiPreviewUrl(URL.createObjectURL(asciiImage!))}
+                className={`px-3 py-1 rounded text-sm ${asciiPreviewUrl ? 'bg-white text-black' : 'bg-gray-600 text-white'}`}
+              >
+                ASCII
+              </button>
+            </div>
+          )}
+
           <div className="flex flex-col-reverse justify-center items-center align-center gap-2">
             <div
               ref={containerRef}
@@ -206,7 +275,7 @@ function ImageUploadEdit() {
                 border: "solid white .25px",
                 cursor: isDragging ? 'grabbing' : 'grab',
                 touchAction: 'none',
-                transition: 'width 0.4s cubic-bezier(.4,0,.2,1), height 0.4s cubic-bezier(.4,0,.2,1)'
+                transition: 'width 0.4s cubic-bezier(.4,0,.2,1), height 0.7s cubic-bezier(.4,0,.2,1)'
               }}
               onMouseDown={handleMouseDown}
               onMouseMove={handleMouseMove}
@@ -230,10 +299,11 @@ function ImageUploadEdit() {
               />
             </div>
           </div>
-          <div className='flex justify-between items-center align-center mt-4' style={{width: isCheckedTwitterBanner ? "500px" : "400px", transition: 'width 0.4s cubic-bezier(.4,0,.2,1), height 0.4s cubic-bezier(.4,0,.2,1)'}}>
+          <div className='flex justify-between items-center align-center mt-4' style={{width: isCheckedTwitterBanner ? "500px" : "400px", transition: 'width 0.7s cubic-bezier(.4,0,.2,1), height 0.4s cubic-bezier(.4,0,.2,1)'}}>
             <div className='flex flex-col gap-2 justify-center align-center'>
-              <span className="text-sm text-gray-400">File: {image?.name}</span>
-              <span className="text-sm text-gray-400">File Size: {image ? Math.round(image.size / 1024 / 1024) : 0} MB</span>
+              <span className="text-sm text-gray-400">File: {displayFile?.name}</span>
+              <span className="text-sm text-gray-400">File Size: {displayFile ? Math.round(displayFile.size / 1024 / 1024) : 0} MB</span>
+              {asciiImage && <span className="text-sm text-green-400">ASCII Generated ✓</span>}
             </div>
             {/* Zoom controls */}
             <div className="flex items-center gap-3" >
@@ -315,18 +385,20 @@ function ImageUploadEdit() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
             </button>
-            <label
-              htmlFor="image-generate"
-              className="cursor-pointer px-2 py-2 text-white rounded-md transition flex flex-row items-center justify-center gap-2"
+            <button
+              onClick={handleGenerateAscii}
+              disabled={isGenerating}
+              className="cursor-pointer px-2 py-2 text-white rounded-md transition flex flex-row items-center justify-center gap-2 disabled:opacity-50"
             >
-              <span className="text-md">generate</span>
+              <span className="text-md">{isGenerating ? 'generating...' : 'generate'}</span>
               <img
                 src="/gen.svg"
                 alt="Generate icon"
                 className="w-4 h-4"
               />
-            </label>
+            </button>
           </div>
+          
         </div>
       )}
     </div>
