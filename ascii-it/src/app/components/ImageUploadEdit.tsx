@@ -344,13 +344,13 @@ function ImageUploadEdit() {
               className="p-4"
             />
           </div>
-          <div className="flex items-center gap-1 mt-3">
+          <div className="flex items-center gap-2 mt-3">
             <span>background: </span>
             <input
               type="text"
               value={backgroundColor}
               onChange={(e) => setBackgroundColor(e.target.value)}
-              className="px-2 py-1 text-white border-b-2 border-white text-sm flex-1 w-10"
+              className="mx-4 pl-2 py-1 text-white border-b-2 border-white text-sm flex-1 w-1"
               placeholder="#222222"
               pattern="^#[0-9A-Fa-f]{6}$"
             />
@@ -368,7 +368,7 @@ function ImageUploadEdit() {
           <div className='flex flex-row justify-center items-center gap-4 mt-5'>
             <label
               htmlFor="image-upload"
-              className="cursor-pointer px-2 pb-1 text-white transition flex flex-row items-center justify-center gap-2 hover:border-b-2 hover:border-white"
+              className="cursor-pointer px-2 pb-1 text-white transition flex flex-row items-center justify-center gap-2"
             >
               <span className="text-md">upload</span>
               <img
@@ -379,7 +379,7 @@ function ImageUploadEdit() {
             </label>
             <button
               onClick={downloadImage}
-              className="cursor-pointer px-2 pb-1 text-white transition flex flex-row items-center justify-center gap-2 hover:border-b-2 hover:border-white"
+              className="cursor-pointer px-2 pb-1 text-white transition flex flex-row items-center justify-center gap-2"
             >
               <span className="text-md">download</span>
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -389,7 +389,7 @@ function ImageUploadEdit() {
             <button
               onClick={handleGenerateAscii}
               disabled={isGenerating}
-              className="cursor-pointer px-2 pb-1 text-white transition flex flex-row items-center justify-center gap-2 hover:border-b-2 hover:border-white disabled:opacity-50"
+              className="cursor-pointer px-2 pb-1 text-white transition flex flex-row items-center justify-center gap-2 disabled:opacity-50"
             >
               <span className="text-md">generate</span>
               <img
