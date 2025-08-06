@@ -48,6 +48,7 @@ function ImageUploadEdit() {
       setAsciiPreviewUrl(null);
     }
   }, [asciiImage]);
+  
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -193,7 +194,8 @@ function ImageUploadEdit() {
   };
 
   // Switch between original and ASCII image
-  const displayImageUrl = viewOriginal ? previewUrl : asciiPreviewUrl;
+  const displayImageUrl = previewUrl;
+  const displayAsciiPreviewUrl = asciiPreviewUrl;
   const displayFile = viewOriginal ? image : asciiImage;
 
   return (
@@ -231,10 +233,7 @@ function ImageUploadEdit() {
         accept="image/*"
         className="hidden"
         onChange={(e) => { 
-          handleFileChange(e); 
-          if (asciiPreviewUrl) {
-            setAsciiPreviewUrl(null) // fix issue with changing asciiPreviewUrl also effects previewUrl
-          }
+          handleFileChange(e);
         }}
       />
 
@@ -260,21 +259,38 @@ function ImageUploadEdit() {
               onMouseUp={handleMouseUp}
               onMouseLeave={handleMouseUp}
             >
-              <img
-                ref={imageRef}
-                src={displayImageUrl}
-                alt="Selected preview"
-                className="object-contain absolute top-1/2 left-1/2"
-                style={{
-                  width: "100%",
-                  height: "100%",
-                  transform: `translate(-50%, -50%) translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
-                  transformOrigin: 'center',
-                  pointerEvents: 'none',
-                  userSelect: 'none'
-                }}
-                draggable={false}
-              />
+              { !viewOriginal && displayAsciiPreviewUrl ? 
+                <img
+                  ref={imageRef}
+                  src={displayAsciiPreviewUrl}
+                  alt="Selected preview"
+                  className="object-contain absolute top-1/2 left-1/2"
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    transform: `translate(-50%, -50%) translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
+                    transformOrigin: 'center',
+                    pointerEvents: 'none',
+                    userSelect: 'none'
+                  }}
+                  draggable={false}
+                /> :
+                <img
+                  ref={imageRef}
+                  src={displayImageUrl}
+                  alt="Selected preview"
+                  className="object-contain absolute top-1/2 left-1/2"
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    transform: `translate(-50%, -50%) translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
+                    transformOrigin: 'center',
+                    pointerEvents: 'none',
+                    userSelect: 'none'
+                  }}
+                  draggable={false}
+                />
+              }
             </div>
           </div>
           <div className='flex justify-between items-center align-center mt-4' style={{width: isCheckedTwitterBanner ? "500px" : "400px", transition: 'width 0.7s cubic-bezier(.4,0,.2,1), height 0.4s cubic-bezier(.4,0,.2,1)'}}>
@@ -298,19 +314,19 @@ function ImageUploadEdit() {
               <div className="flex items-center justify-end align-center gap-3" >
                 <button
                   onClick={() => setZoom(Math.min(zoom + 0.1, 5))}
-                  className="px-2 text-white rounded text-lg"
+                  className="cursor-pointer px-2 text-white rounded text-lg"
                 >
                   +
                 </button>
                 <button
                   onClick={() => setZoom(Math.max(zoom - 0.1, 0.5))}
-                  className="px-2 text-white rounded text-lg"
+                  className="cursor-pointer px-2 text-white rounded text-lg"
                 >
                   -
                 </button>
                 <button
                   onClick={resetZoom}
-                  className="px-2 text-white rounded text-lg"
+                  className="cursor-pointer px-2 text-white rounded text-lg"
                 >
                   x
                 </button>
