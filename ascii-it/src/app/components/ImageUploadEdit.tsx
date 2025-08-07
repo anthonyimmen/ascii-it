@@ -4,6 +4,7 @@ import { Slider } from '@/components/ui/slider';
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { Checkbox } from './Checkbox';
 import { imageToAscii } from './ImageToAscii';
+import Dropdown from './Dropdown';
 
 function ImageUploadEdit() {
   const [image, setImage] = useState<File | null>(null);
@@ -15,6 +16,7 @@ function ImageUploadEdit() {
   const [backgroundColor, setBackgroundColor] = useState("#222222");
   const [isGenerating, setIsGenerating] = useState(false);
   const [viewOriginal, setViewOriginal] = useState(true); 
+  const [characterSet, setCharacterSet] = useState(".:*-=+#");
   
   // Zoom and pan state
   const [zoom, setZoom] = useState(1);
@@ -183,7 +185,7 @@ function ImageUploadEdit() {
     
     setIsGenerating(true);
     try {
-      const asciiImageFile = await imageToAscii(0, isCheckedColor, true, image, backgroundColor);
+      const asciiImageFile = await imageToAscii(characterSet, isCheckedColor, true, image, backgroundColor);
       setAsciiImage(asciiImageFile);
       setViewOriginal(false); // Switch to ASCII view after generation
     } catch (error) {
@@ -334,15 +336,6 @@ function ImageUploadEdit() {
             </div>
           </div>
           <div className="flex items-center gap-2 mt-3">
-            <span>density: </span>
-            <Slider
-              defaultValue={[50]}
-              max={100}
-              step={1}
-              className="p-4"
-            />
-          </div>
-          <div className="flex items-center gap-2 mt-3">
             <span>brightness: </span>
             <Slider
               defaultValue={[50]}
@@ -370,6 +363,10 @@ function ImageUploadEdit() {
               placeholder="#222222"
               pattern="^#[0-9A-Fa-f]{6}$"
             />
+          </div>
+          <div className="flex items-center gap-2 mt-3 pt-2">
+            <span>characters: </span>
+            <Dropdown placeholder=".:*-=+#" options={[".:*-=+#", "⠁⠂⠃⠄⠅⠆⠇", " ░▒▓█"]} value={characterSet} onSelect={(option) => setCharacterSet((option as string))}/>
           </div>
           <div className="flex items-center gap-4 mt-4">
             <div className="flex items-center gap-2 mt-2">

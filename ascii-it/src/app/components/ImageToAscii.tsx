@@ -1,9 +1,18 @@
-export function imageToAscii(setType: number, color: boolean, brightness: boolean, image: File | null, backgroundColor: string = "#222222"): Promise<File> {
+export function imageToAscii(setType: string, color: boolean, brightness: boolean, image: File | null, backgroundColor: string = "#222222"): Promise<File> {
   const characterSets = [
     ".:*-=+#",
     "⠁⠂⠃⠄⠅⠆⠇⠈⠉⠊⠋⠌⠍⠎⠏⠐⠑⠒⠓⠔⠕⠖⠗⠘⠙⠚⠛⠜⠝⠞⠟",
     " ░▒▓█"
   ];
+
+  // Map the setType to a character set
+  if (setType == ".:*-=+#") {
+    setType = characterSets[0];
+  } else if (setType == "⠁⠂⠃⠄⠅⠆⠇") {
+    setType = characterSets[1];
+  } else {
+    setType = " ░▒▓█"
+  }
 
   return new Promise((resolve, reject) => {
     if (!image) {
@@ -30,7 +39,7 @@ export function imageToAscii(setType: number, color: boolean, brightness: boolea
       const pixels = imageData.data;
       
       // Get character set
-      const chars = characterSets[setType] || characterSets[0];
+      const chars = setType;
       
       let asciiArt = '';
       
@@ -82,7 +91,7 @@ export function imageToAscii(setType: number, color: boolean, brightness: boolea
       
       // Set canvas size for the ASCII art
       const fontSize = 12;
-      const charWidth = fontSize * 0.6;
+      const charWidth = fontSize * .5;
       const lineHeight = fontSize;
       const lines = asciiArt.split('\n').filter(line => line.trim().length > 0); // Remove empty lines
       const maxLineLength = Math.max(...lines.map(line => line.replace(/<[^>]*>/g, '').length));
