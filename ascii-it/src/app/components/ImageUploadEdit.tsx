@@ -273,7 +273,7 @@ function ImageUploadEdit() {
                     transform: `translate(-50%, -50%) translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
                     transformOrigin: 'center',
                     pointerEvents: 'none',
-                    userSelect: 'none'
+                    userSelect: 'none',
                   }}
                   draggable={false}
                 /> :
@@ -288,7 +288,7 @@ function ImageUploadEdit() {
                     transform: `translate(-50%, -50%) translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
                     transformOrigin: 'center',
                     pointerEvents: 'none',
-                    userSelect: 'none'
+                    userSelect: 'none',
                   }}
                   draggable={false}
                 />
@@ -336,35 +336,17 @@ function ImageUploadEdit() {
             </div>
           </div>
           <div className="flex items-center gap-2 mt-3">
-            <span>brightness: </span>
-            <Slider
-              defaultValue={[50]}
-              max={100}
-              step={1}
-              className="p-4"
-            />
-          </div>
-          <div className="flex items-center gap-2 mt-3">
-            <span>font size: </span>
-            <Slider
-              defaultValue={[50]}
-              max={100}
-              step={1}
-              className="p-4"
-            />
-          </div>
-          <div className="flex items-center gap-2 mt-3">
             <span>background: </span>
             <input
               type="text"
               value={backgroundColor}
               onChange={(e) => setBackgroundColor(e.target.value)}
-              className="mx-4 pl-2 py-1 text-white border-b-2 border-white flex-1 w-1"
+              className="ml-4 pl-2 py-1 text-white border-b-2 border-white flex-1 w-1"
               placeholder="#222222"
               pattern="^#[0-9A-Fa-f]{6}$"
             />
           </div>
-          <div className="flex mr-3 items-center gap-4 mt-4 pt-2">
+          <div className="flex items-center gap-4 mt-4 pt-2">
             <span>chars: </span>
             <Dropdown placeholder=".:*-=+#" options={[".:*-=+#", "⠁⠂⠃⠄⠅⠆⠇", " ░▒▓█"]} value={characterSet} onSelect={(option) => setCharacterSet((option as string))}/>
           </div>
