@@ -103,7 +103,7 @@ const Dropdown: React.FC<DropdownProps> = ({
   return (
     <div 
       ref={dropdownRef}
-      className={`relative w-64 ${className}`}
+      className={`relative flex-1 w-1 ${className}`}
     >
       <button
         ref={buttonRef}
@@ -112,7 +112,7 @@ const Dropdown: React.FC<DropdownProps> = ({
         onKeyDown={handleKeyDown}
         disabled={disabled}
         className={`
-          w-full ml-4 px-4 py-2 text-left border border-white rounded-md
+          w-full px-4 py-2 text-left border border-white gap-2 rounded-md
           flex items-center justify-between
           ${disabled 
             ? 'bg-gray-100 text-white cursor-not-allowed' 
@@ -134,7 +134,7 @@ const Dropdown: React.FC<DropdownProps> = ({
       </button>
 
       {isOpen && (
-        <div className="absolute z-10 w-full mt-1 ml-4 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
+        <div className="absolute z-10 w-full mt-1 mx-4 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
           <ul
             role="listbox"
             className="py-1"

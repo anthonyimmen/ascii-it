@@ -359,13 +359,13 @@ function ImageUploadEdit() {
               type="text"
               value={backgroundColor}
               onChange={(e) => setBackgroundColor(e.target.value)}
-              className="mx-4 pl-2 py-1 text-white border-b-2 border-white text-sm flex-1 w-1"
+              className="mx-4 pl-2 py-1 text-white border-b-2 border-white flex-1 w-1"
               placeholder="#222222"
               pattern="^#[0-9A-Fa-f]{6}$"
             />
           </div>
-          <div className="flex items-center gap-2 mt-3 pt-2">
-            <span>characters: </span>
+          <div className="flex mr-3 items-center gap-4 mt-4 pt-2">
+            <span>chars: </span>
             <Dropdown placeholder=".:*-=+#" options={[".:*-=+#", "⠁⠂⠃⠄⠅⠆⠇", " ░▒▓█"]} value={characterSet} onSelect={(option) => setCharacterSet((option as string))}/>
           </div>
           <div className="flex items-center gap-4 mt-4">
