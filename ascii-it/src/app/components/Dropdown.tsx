@@ -134,7 +134,7 @@ const Dropdown: React.FC<DropdownProps> = ({
       </button>
 
       {isOpen && (
-        <div className="absolute z-10 w-full px-4 py-2 mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
+        <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-30 overflow-auto">
           <ul
             role="listbox"
             className="py-1"
@@ -152,7 +152,7 @@ const Dropdown: React.FC<DropdownProps> = ({
                   role="option"
                   aria-selected={isSelected}
                   className={`
-                    px-4 py-2 cursor-pointer text-black
+                    px-4 py-1 cursor-pointer text-black hover:bg-gray-200
                   `}
                 >
                   {optionLabel}
@@ -162,90 +162,6 @@ const Dropdown: React.FC<DropdownProps> = ({
           </ul>
         </div>
       )}
-    </div>
-  );
-};
-
-// Example usage component
-const DropdownExample: React.FC = () => {
-  const [selectedValue, setSelectedValue] = useState<string>('');
-  const [selectedObject, setSelectedObject] = useState<string>('');
-
-  const simpleOptions: string[] = ['Apple', 'Banana', 'Cherry', 'Date', 'Elderberry'];
-  
-  const objectOptions: DropdownOption[] = [
-    { value: 'react', label: 'React' },
-    { value: 'vue', label: 'Vue.js' },
-    { value: 'angular', label: 'Angular' },
-    { value: 'svelte', label: 'Svelte' }
-  ];
-
-  return (
-    <div className="p-8 space-y-8 bg-gray-50 min-h-screen">
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900 mb-8">Dropdown Component Examples</h1>
-        
-        <div className="space-y-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Simple String Options
-            </label>
-            <Dropdown
-              options={simpleOptions}
-              placeholder="Choose a fruit..."
-              value={selectedValue}
-              onSelect={(option) => setSelectedValue(option as string)}
-            />
-            {selectedValue && (
-              <p className="mt-2 text-sm text-gray-600">
-                Selected: <span className="font-medium">{selectedValue}</span>
-              </p>
-            )}
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Object Options (value/label pairs)
-            </label>
-            <Dropdown
-              options={objectOptions}
-              placeholder="Choose a framework..."
-              value={selectedObject}
-              onSelect={(option) => setSelectedObject((option as DropdownOption).value)}
-            />
-            {selectedObject && (
-              <p className="mt-2 text-sm text-gray-600">
-                Selected: <span className="font-medium">{selectedObject}</span>
-              </p>
-            )}
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Disabled Dropdown
-            </label>
-            <Dropdown
-              options={simpleOptions}
-              placeholder="This dropdown is disabled"
-              disabled={true}
-            />
-          </div>
-        </div>
-      </div>
-      
-      <div className="bg-white p-6 rounded-lg shadow-sm">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Features</h2>
-        <ul className="space-y-2 text-sm text-gray-600">
-          <li>✅ Click to open/close dropdown</li>
-          <li>✅ Keyboard navigation (Arrow keys, Enter, Escape)</li>
-          <li>✅ Click outside to close</li>
-          <li>✅ Support for both string and object options</li>
-          <li>✅ Disabled state</li>
-          <li>✅ Customizable styling</li>
-          <li>✅ Accessible with ARIA attributes</li>
-          <li>✅ Smooth animations and hover effects</li>
-        </ul>
-      </div>
     </div>
   );
 };

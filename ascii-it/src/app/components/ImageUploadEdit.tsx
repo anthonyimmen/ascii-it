@@ -6,6 +6,8 @@ import { Checkbox } from './Checkbox';
 import { imageToAscii } from './ImageToAscii';
 import Dropdown from './Dropdown';
 
+// TODO: add share to twitter, maybe bring back the sliders, and begin some type of backend functionality
+
 function ImageUploadEdit() {
   const [image, setImage] = useState<File | null>(null);
   const [asciiImage, setAsciiImage] = useState<File | null>(null);
@@ -247,11 +249,11 @@ function ImageUploadEdit() {
               ref={containerRef}
               className="relative overflow-hidden"
               style={{
-                backgroundColor: "#222222",
+                backgroundColor: "#222",
                 width: isCheckedTwitterBanner ? "500px" : "400px",
                 height: isCheckedTwitterBanner ? "166.67px" : "400px",
                 borderRadius: 3,
-                border: "solid white .25px",
+                border: "dashed #cececeff .25px",
                 cursor: isDragging ? 'grabbing' : 'grab',
                 touchAction: 'none',
                 transition: 'width 0.4s cubic-bezier(.4,0,.2,1), height 0.7s cubic-bezier(.4,0,.2,1)'
