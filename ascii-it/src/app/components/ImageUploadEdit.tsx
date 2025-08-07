@@ -18,7 +18,7 @@ function ImageUploadEdit() {
   const [backgroundColor, setBackgroundColor] = useState("#222222");
   const [isGenerating, setIsGenerating] = useState(false);
   const [viewOriginal, setViewOriginal] = useState(true); 
-  const [characterSet, setCharacterSet] = useState(".:*-=+#");
+  const [characterSet, setCharacterSet] = useState(".:*-=+%#@");
   
   // Zoom and pan state
   const [zoom, setZoom] = useState(1);
@@ -249,7 +249,7 @@ function ImageUploadEdit() {
               ref={containerRef}
               className="relative overflow-hidden"
               style={{
-                backgroundColor: "#222",
+                backgroundColor: "#222222",
                 width: isCheckedTwitterBanner ? "500px" : "400px",
                 height: isCheckedTwitterBanner ? "166.67px" : "400px",
                 borderRadius: 3,
@@ -350,7 +350,7 @@ function ImageUploadEdit() {
           </div>
           <div className="flex items-center gap-4 mt-4 pt-2">
             <span>chars: </span>
-            <Dropdown placeholder=".:*-=+#" options={[".:*-=+#", "⠁⠂⠃⠄⠅⠆⠇", " ░▒▓█"]} value={characterSet} onSelect={(option) => setCharacterSet((option as string))}/>
+            <Dropdown placeholder=".:*-=+%#@" options={[".:*-=+%#@", "⠁⠂⠃⠄⠅⠆⠇", " ░▒▓█"]} value={characterSet} onSelect={(option) => setCharacterSet((option as string))}/>
           </div>
           <div className="flex items-center gap-4 mt-4">
             <div className="flex items-center gap-2 mt-2">

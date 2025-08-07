@@ -1,12 +1,12 @@
 export function imageToAscii(setType: string, color: boolean, brightness: boolean, image: File | null, backgroundColor: string = "#222222"): Promise<File> {
   const characterSets = [
-    ".:*-=+#",
+    ".:*-=+%#@",
     "⠁⠂⠃⠄⠅⠆⠇⠈⠉⠊⠋⠌⠍⠎⠏⠐⠑⠒⠓⠔⠕⠖⠗⠘⠙⠚⠛⠜⠝⠞⠟",
     " ░▒▓█"
   ];
 
   // Map the setType to a character set
-  if (setType == ".:*-=+#") {
+  if (setType == ".:*-=+%#@") {
     setType = characterSets[0];
   } else if (setType == "⠁⠂⠃⠄⠅⠆⠇") {
     setType = characterSets[1];
@@ -28,8 +28,11 @@ export function imageToAscii(setType: string, color: boolean, brightness: boolea
       // Set canvas dimensions - scale down for ASCII art
       const maxWidth = 100;
       const aspectRatio = img.height / img.width;
-      canvas.width = Math.min(img.width, maxWidth);
-      canvas.height = Math.floor(canvas.width * aspectRatio * 0.5);
+
+      // TODO: add in adjustable detail slider divide on the width and multiply the height
+      // TODO: add in adjustable brightness detection?
+      canvas.width = Math.min(img.width, maxWidth) / .5;
+      canvas.height = Math.floor(Math.min(img.width, maxWidth) * aspectRatio);
       
       // Draw image to canvas
       ctx!.drawImage(img, 0, 0, canvas.width, canvas.height);
