@@ -26,7 +26,11 @@ export function imageToAscii(setType: string, color: boolean, brightness: boolea
     
     img.onload = function() {
       // Set canvas dimensions - scale down for ASCII art
-      const baseMaxWidth = 100;
+      const minDensity = 1;
+      const maxDensity = 10; // You can set this to whatever you want
+      const densityFactor = Math.max(minDensity, Math.min(density, maxDensity));
+
+      const baseMaxWidth = Math.floor(200 * densityFactor / 10); // Base width scaled by density factor
       const aspectRatio = img.height / img.width * .5;
       canvas.width = baseMaxWidth;
       canvas.height = Math.floor(baseMaxWidth * aspectRatio);
@@ -40,9 +44,10 @@ export function imageToAscii(setType: string, color: boolean, brightness: boolea
       const chars = setType;
 
       let asciiArt = '';
-      const densityFactor = Math.max(0.1, Math.min(density, 1)); // Clamp between 0.1 and 1
-      const xStep = Math.floor(1 / densityFactor) || 1;
-      const yStep = Math.floor(1 / densityFactor) || 1;
+
+      // Smaller step for higher density (more characters)
+      const xStep = Math.max(1, Math.floor(1 / densityFactor));
+      const yStep = Math.max(1, Math.floor(1 / densityFactor));
 
       // Process each pixel row
       for (let y = 0; y < canvas.height; y += yStep) {

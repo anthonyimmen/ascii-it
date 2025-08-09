@@ -116,8 +116,9 @@ function ImageUploadEdit() {
     if (!container) return;
     
     // Set canvas size to match the container
-    canvas.width = isCheckedTwitterBanner ? 1500 : 400;
-    canvas.height = isCheckedTwitterBanner ? 500 : 400;
+    canvas.width = (isCheckedTwitterBanner ? 1500 : 400) * 10;
+    canvas.height = (isCheckedTwitterBanner ? 500 : 400) * 10;
+    
 
     // Get the actual display size of the container
     const containerRect = container.getBoundingClientRect();
@@ -125,7 +126,7 @@ function ImageUploadEdit() {
     const displayContainerHeight = containerRect.height;
 
     // Clear canvas with same background as container
-    ctx.fillStyle = '#222222';
+    ctx.fillStyle = backgroundColor;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     // Calculate the display size of the image in the container
@@ -343,9 +344,9 @@ function ImageUploadEdit() {
             <Slider
               value={[density]} // <-- Controlled value
               onValueChange={(value) => setDensity(value[0])} // <-- Update state
-              min={0}
-              max={.7}
-              step={.1}
+              min={1}
+              max={10}
+              step={1}
               className="p-4 pr-0"
             />
           </div>
