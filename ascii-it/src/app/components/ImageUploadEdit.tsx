@@ -19,7 +19,8 @@ function ImageUploadEdit() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [viewOriginal, setViewOriginal] = useState(true); 
   const [characterSet, setCharacterSet] = useState(".:*-=+%#@");
-  
+  const [density, setDensity] = useState(50);
+
   // Zoom and pan state
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
@@ -187,7 +188,7 @@ function ImageUploadEdit() {
     
     setIsGenerating(true);
     try {
-      const asciiImageFile = await imageToAscii(characterSet, isCheckedColor, true, image, backgroundColor);
+      const asciiImageFile = await imageToAscii(characterSet, isCheckedColor, true, image, backgroundColor, density);
       setAsciiImage(asciiImageFile);
       setViewOriginal(false); // Switch to ASCII view after generation
     } catch (error) {
@@ -337,6 +338,17 @@ function ImageUploadEdit() {
               </div>
             </div>
           </div>
+          <div className="flex items-center gap-2 mt-2">
+            <span>density: </span>
+            <Slider
+              value={[density]} // <-- Controlled value
+              onValueChange={(value) => setDensity(value[0])} // <-- Update state
+              min={0}
+              max={.7}
+              step={.1}
+              className="p-4 pr-0"
+            />
+          </div>
           <div className="flex items-center gap-2 mt-3">
             <span>background: </span>
             <input
@@ -348,7 +360,7 @@ function ImageUploadEdit() {
               pattern="^#[0-9A-Fa-f]{6}$"
             />
           </div>
-          <div className="flex items-center gap-4 mt-4 pt-2">
+          <div className="flex items-center gap-6 mt-4 pt-2">
             <span>chars: </span>
             <Dropdown placeholder=".:*-=+%#@" options={[".:*-=+%#@", "⠁⠂⠃⠄⠅⠆⠇", " ░▒▓█"]} value={characterSet} onSelect={(option) => setCharacterSet((option as string))}/>
           </div>

@@ -1,4 +1,4 @@
-export function imageToAscii(setType: string, color: boolean, brightness: boolean, image: File | null, backgroundColor: string = "#222222"): Promise<File> {
+export function imageToAscii(setType: string, color: boolean, brightness: boolean, image: File | null, backgroundColor: string = "#222222", density: number): Promise<File> {
   const characterSets = [
     ".:*-=+%#@",
     "⠁⠂⠃⠄⠅⠆⠇⠈⠉⠊⠋⠌⠍⠎⠏⠐⠑⠒⠓⠔⠕⠖⠗⠘⠙⠚⠛⠜⠝⠞⠟",
@@ -26,65 +26,47 @@ export function imageToAscii(setType: string, color: boolean, brightness: boolea
     
     img.onload = function() {
       // Set canvas dimensions - scale down for ASCII art
-      const maxWidth = 100;
-      const aspectRatio = img.height / img.width;
+      const baseMaxWidth = 100;
+      const aspectRatio = img.height / img.width * .5;
+      canvas.width = baseMaxWidth;
+      canvas.height = Math.floor(baseMaxWidth * aspectRatio);
 
-      // TODO: add in adjustable detail slider divide on the width and multiply the height
-      // TODO: add in adjustable brightness detection?
-      canvas.width = Math.min(img.width, maxWidth) / .5;
-      canvas.height = Math.floor(Math.min(img.width, maxWidth) * aspectRatio);
-      
       // Draw image to canvas
       ctx!.drawImage(img, 0, 0, canvas.width, canvas.height);
       
       // Get image data
       const imageData = ctx!.getImageData(0, 0, canvas.width, canvas.height);
       const pixels = imageData.data;
-      
-      // Get character set
       const chars = setType;
-      
+
       let asciiArt = '';
-      
+      const densityFactor = Math.max(0.1, Math.min(density, 1)); // Clamp between 0.1 and 1
+      const xStep = Math.floor(1 / densityFactor) || 1;
+      const yStep = Math.floor(1 / densityFactor) || 1;
+
       // Process each pixel row
-      for (let y = 0; y < canvas.height; y++) {
+      for (let y = 0; y < canvas.height; y += yStep) {
         let row = '';
-        
-        for (let x = 0; x < canvas.width; x++) {
+        for (let x = 0; x < canvas.width; x += xStep) {
           const pixelIndex = (y * canvas.width + x) * 4;
           const r = pixels[pixelIndex];
           const g = pixels[pixelIndex + 1];
           const b = pixels[pixelIndex + 2];
           const a = pixels[pixelIndex + 3];
-          
-          // Calculate brightness (0-255)
+
           const pixelBrightness = Math.floor((r + g + b) / 3);
-          
-          // Map brightness to character index
           const charIndex = Math.floor((pixelBrightness / 255) * (chars.length - 1));
           const char = chars[charIndex];
-          
-          // Apply color and brightness styling
+
           let styledChar = char;
-          
           if (color || brightness) {
             let styles = [];
-            
-            if (color) {
-              styles.push(`color: rgb(${r}, ${g}, ${b})`);
-            }
-            
-            if (brightness) {
-              const opacity = a / 255;
-              styles.push(`opacity: ${opacity}`);
-            }
-            
+            if (color) styles.push(`color: rgb(${r}, ${g}, ${b})`);
+            if (brightness) styles.push(`opacity: ${a / 255}`);
             styledChar = `<span style="${styles.join('; ')}">${char}</span>`;
           }
-          
           row += styledChar;
         }
-        
         asciiArt += row + '\n';
       }
       
