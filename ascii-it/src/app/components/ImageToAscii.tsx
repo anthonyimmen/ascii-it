@@ -80,7 +80,7 @@ export function imageToAscii(setType: string, color: boolean, brightness: boolea
       const htmlCtx = htmlCanvas.getContext('2d');
       
       // Set canvas size for the ASCII art
-      const fontSize = 12;
+      const fontSize = 38;
       const charWidth = fontSize * .5;
       const lineHeight = fontSize;
       const lines = asciiArt.split('\n').filter(line => line.trim().length > 0); // Remove empty lines

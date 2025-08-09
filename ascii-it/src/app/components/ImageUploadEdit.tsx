@@ -15,8 +15,7 @@ function ImageUploadEdit() {
   const [asciiPreviewUrl, setAsciiPreviewUrl] = useState<string | null>(null);
   const [isCheckedColor, setIsCheckedColor] = useState(false);
   const [isCheckedTwitterBanner, setIsCheckedTwitterBanner] = useState(false);
-  const [backgroundColor, setBackgroundColor] = useState("#222222");
-  const [isGenerating, setIsGenerating] = useState(false);
+  const [backgroundColor, setBackgroundColor] = useState("#292929");
   const [viewOriginal, setViewOriginal] = useState(true); 
   const [characterSet, setCharacterSet] = useState(".:*-=+%#@");
   const [density, setDensity] = useState(50);
@@ -38,6 +37,10 @@ function ImageUploadEdit() {
       if (asciiPreviewUrl) URL.revokeObjectURL(asciiPreviewUrl);
     };
   }, []);
+
+  useEffect(() => {
+    handleGenerateAscii()
+  }, [density, backgroundColor, isCheckedColor, characterSet])
 
   // Create preview URL when asciiImage changes
   useEffect(() => {
@@ -187,15 +190,12 @@ function ImageUploadEdit() {
   const handleGenerateAscii = async () => {
     if (!image) return;
     
-    setIsGenerating(true);
     try {
       const asciiImageFile = await imageToAscii(characterSet, isCheckedColor, true, image, backgroundColor, density);
       setAsciiImage(asciiImageFile);
       setViewOriginal(false); // Switch to ASCII view after generation
     } catch (error) {
       console.error('Error converting to ASCII:', error);
-    } finally {
-      setIsGenerating(false);
     }
   };
 
@@ -251,7 +251,7 @@ function ImageUploadEdit() {
               ref={containerRef}
               className="relative overflow-hidden"
               style={{
-                backgroundColor: "#222222",
+                backgroundColor: "#292929",
                 width: isCheckedTwitterBanner ? "500px" : "400px",
                 height: isCheckedTwitterBanner ? "166.67px" : "400px",
                 borderRadius: 3,
@@ -300,7 +300,7 @@ function ImageUploadEdit() {
             </div>
           </div>
           <div className='flex justify-between items-center align-center mt-4' style={{width: isCheckedTwitterBanner ? "500px" : "400px", transition: 'width 0.7s cubic-bezier(.4,0,.2,1), height 0.4s cubic-bezier(.4,0,.2,1)'}}>
-            <div className='flex flex-col gap-2 justify-center align-center'>
+            <div className='flex flex-col gap-2 justify-center align-center' style={{maxWidth: "300px"}}>
               <span className="text-sm text-gray-400">File: {displayFile?.name}</span>
               <span className="text-sm text-gray-400">File Size: {displayFile ? Math.round(displayFile.size / 1024 / 1024) : 0} MB</span>
             </div>
@@ -357,7 +357,7 @@ function ImageUploadEdit() {
               value={backgroundColor}
               onChange={(e) => setBackgroundColor(e.target.value)}
               className="ml-4 pl-2 py-1 text-white border-b-2 border-white flex-1 w-1"
-              placeholder="#222222"
+              placeholder="#292929"
               pattern="^#[0-9A-Fa-f]{6}$"
             />
           </div>
@@ -396,9 +396,8 @@ function ImageUploadEdit() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
             </button>
-            <button
+            {/* <button
               onClick={handleGenerateAscii}
-              disabled={isGenerating}
               className="cursor-pointer px-2 pb-1 text-white transition flex flex-row items-center justify-center gap-2 disabled:opacity-50"
             >
               <span className="text-md">generate</span>
@@ -407,7 +406,7 @@ function ImageUploadEdit() {
                 alt="Generate icon"
                 className="w-4 h-4"
               />
-            </button>
+            </button> */}
           </div>
           
         </div>
