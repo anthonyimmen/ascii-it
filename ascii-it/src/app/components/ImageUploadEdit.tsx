@@ -178,7 +178,7 @@ function ImageUploadEdit() {
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `edited-${image?.name || 'image.png'}`;
+        a.download = `ascii-${image?.name || 'image.png'}`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
@@ -252,8 +252,8 @@ function ImageUploadEdit() {
               className="relative overflow-hidden"
               style={{
                 backgroundColor: "#292929",
-                width: isCheckedTwitterBanner ? "500px" : "400px",
-                height: isCheckedTwitterBanner ? "166.67px" : "400px",
+                width: isCheckedTwitterBanner ? "min(500px, 90vw)" : "min(400px, 90vw)",
+                height: isCheckedTwitterBanner ? "min(166.67px, 30vh)" : "min(400px, 60vh)",
                 borderRadius: 3,
                 border: "dashed #cececeff .25px",
                 cursor: isDragging ? 'grabbing' : 'grab',
@@ -299,7 +299,7 @@ function ImageUploadEdit() {
               }
             </div>
           </div>
-          <div className='flex justify-between items-center align-center mt-4' style={{width: isCheckedTwitterBanner ? "500px" : "400px", transition: 'width 0.7s cubic-bezier(.4,0,.2,1), height 0.4s cubic-bezier(.4,0,.2,1)'}}>
+          <div className='flex justify-between items-center align-center mt-4 mx-auto' style={{width: isCheckedTwitterBanner ? "min(500px, 90vw)" : "min(400px, 90vw)", transition: 'width 0.7s cubic-bezier(.4,0,.2,1), height 0.4s cubic-bezier(.4,0,.2,1)'}}>
             <div className='flex flex-col gap-2 justify-center align-center' style={{maxWidth: "300px"}}>
               <span className="text-sm text-gray-400">File: {displayFile?.name}</span>
               <span className="text-sm text-gray-400">File Size: {displayFile ? Math.round(displayFile.size / 1024 / 1024) : 0} MB</span>
@@ -320,19 +320,19 @@ function ImageUploadEdit() {
               <div className="flex items-center justify-end align-center gap-3" >
                 <button
                   onClick={() => setZoom(Math.min(zoom + 0.1, 5))}
-                  className="cursor-pointer px-2 text-white rounded text-lg"
+                  className="cursor-pointer px-1 text-white rounded text-lg"
                 >
                   +
                 </button>
                 <button
                   onClick={() => setZoom(Math.max(zoom - 0.1, 0.5))}
-                  className="cursor-pointer px-2 text-white rounded text-lg"
+                  className="cursor-pointer px-1 text-white rounded text-lg"
                 >
                   -
                 </button>
                 <button
                   onClick={resetZoom}
-                  className="cursor-pointer px-2 text-white rounded text-lg"
+                  className="cursor-pointer px-1 text-white rounded text-lg"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -358,16 +358,19 @@ function ImageUploadEdit() {
               type="text"
               value={backgroundColor}
               onChange={(e) => setBackgroundColor(e.target.value)}
-              className="ml-4 pl-2 py-1 text-white border-b-2 border-white flex-1 w-1"
+              className="ml-4 pl-2 py-1 text-white border-b-2 flex-1 w-1"
+              style={{
+                outline: 'none'
+              }}
               placeholder="#292929"
               pattern="^#[0-9A-Fa-f]{6}$"
             />
           </div>
           <div className="flex items-center gap-6 mt-4 pt-2">
             <span>chars: </span>
-            <Dropdown placeholder=".:*-=+%#@" options={[".:*-=+%#@", "⠁⠂⠃⠄⠅⠆⠇", " ░▒▓█"]} value={characterSet} onSelect={(option) => setCharacterSet((option as string))}/>
+              <Dropdown placeholder=".:*-=+%#@" options={[".:*-=+%#@", "⠁⠂⠃⠄⠅⠆⠇", " ░▒▓█"]} value={characterSet} onSelect={(option) => setCharacterSet((option as string))}/>
           </div>
-          <div className="flex items-center gap-4 mt-4">
+          <div className="flex items-center gap-4 mt-4 px-1 sm:px-0">
             <div className="flex items-center gap-2 mt-2">
               <Checkbox checked={isCheckedColor} onChange={() => setIsCheckedColor(!isCheckedColor)}/>
               <span>color?</span>
@@ -398,8 +401,18 @@ function ImageUploadEdit() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
             </button>
+             <button
+              onClick={handleGenerateAscii}
+              className="cursor-pointer px-2 pb-1 text-white transition flex flex-row items-center justify-center gap-2 disabled:opacity-50"
+            >
+              <span className="text-md">generate</span>
+              <img
+                src="/gen.svg"
+                alt="Generate icon"
+                className="w-4 h-4"
+              />
+            </button>
           </div>
-          
         </div>
       )}
     </div>

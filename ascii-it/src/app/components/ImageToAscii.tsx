@@ -175,7 +175,7 @@ export function imageToAscii(setType: string, color: boolean, brightness: boolea
       // Convert canvas to blob and then to File
       htmlCanvas.toBlob((blob) => {
         if (blob) {
-          const fileName = `ascii-it-${image?.name || 'image.png'}`;
+          const fileName = `ascii-${image?.name || 'image.png'}`;
           const file = new File([blob], fileName, { type: 'image/png' });
           resolve(file);
         } else {
