@@ -70,6 +70,7 @@ function ImageUploadEdit() {
       setPreviewUrl(URL.createObjectURL(file));
       setAsciiImage(null); // Clear ASCII image when new image is uploaded
       setAsciiPreviewUrl(null);
+      setViewOriginal(true);
       // Reset zoom and pan when new image is loaded
       setZoom(1);
       setPan({ x: 0, y: 0 });
@@ -121,7 +122,6 @@ function ImageUploadEdit() {
     // Set canvas size to match the container
     canvas.width = (isCheckedTwitterBanner ? 1500 : 400) * 10;
     canvas.height = (isCheckedTwitterBanner ? 500 : 400) * 10;
-    
 
     // Get the actual display size of the container
     const containerRect = container.getBoundingClientRect();
@@ -396,17 +396,6 @@ function ImageUploadEdit() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
             </button>
-            {/* <button
-              onClick={handleGenerateAscii}
-              className="cursor-pointer px-2 pb-1 text-white transition flex flex-row items-center justify-center gap-2 disabled:opacity-50"
-            >
-              <span className="text-md">generate</span>
-              <img
-                src="/gen.svg"
-                alt="Generate icon"
-                className="w-4 h-4"
-              />
-            </button> */}
           </div>
           
         </div>
