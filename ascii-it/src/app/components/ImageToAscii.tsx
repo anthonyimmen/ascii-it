@@ -65,7 +65,7 @@ export function imageToAscii(setType: string, color: boolean, brightness: boolea
 
           let styledChar = char;
           if (color || brightness) {
-            let styles = [];
+            const styles = [];
             if (color) styles.push(`color: rgb(${r}, ${g}, ${b})`);
             if (brightness) styles.push(`opacity: ${a / 255}`);
             styledChar = `<span style="${styles.join('; ')}">${char}</span>`;
