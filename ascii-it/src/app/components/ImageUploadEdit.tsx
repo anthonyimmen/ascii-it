@@ -6,7 +6,7 @@ import { Checkbox } from './Checkbox';
 import { imageToAscii } from './ImageToAscii';
 import Dropdown from './Dropdown';
 
-// TODO: add share to twitter, maybe bring back the sliders, and begin some type of backend functionality
+// TODO: begin top 10-15 recently generated images being shown, add back touch image panning in window
 
 function ImageUploadEdit() {
   const [image, setImage] = useState<File | null>(null);
@@ -119,14 +119,15 @@ function ImageUploadEdit() {
     const container = containerRef.current;
     if (!container) return;
     
-    // Set canvas size to match the container
-    canvas.width = (isCheckedTwitterBanner ? 1500 : 400) * 10;
-    canvas.height = (isCheckedTwitterBanner ? 500 : 400) * 10;
-
-    // Get the actual display size of the container
+    // Get the actual display size of the container first
     const containerRect = container.getBoundingClientRect();
     const displayContainerWidth = containerRect.width;
     const displayContainerHeight = containerRect.height;
+    
+    // Set canvas size to match the actual displayed container dimensions
+    const scaleFactor = 10; // High resolution multiplier
+    canvas.width = displayContainerWidth * scaleFactor;
+    canvas.height = displayContainerHeight * scaleFactor;
 
     // Clear canvas with same background as container
     ctx.fillStyle = backgroundColor;
