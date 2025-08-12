@@ -38,10 +38,6 @@ function ImageUploadEdit() {
     };
   }, []);
 
-  useEffect(() => {
-    handleGenerateAscii()
-  }, [density, backgroundColor, isCheckedColor, characterSet])
-
   // Create preview URL when asciiImage changes
   useEffect(() => {
     if (asciiImage) {
