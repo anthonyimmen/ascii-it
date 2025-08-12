@@ -256,7 +256,7 @@ function ImageUploadEdit() {
                 width: isCheckedTwitterBanner ? "min(500px, 90vw)" : "min(400px, 90vw)",
                 height: isCheckedTwitterBanner ? "min(166.67px, 30vh)" : "min(400px, 60vh)",
                 borderRadius: 3,
-                border: "dashed #cececeff .25px",
+                border: "dashed #cececeff .5px",
                 cursor: isDragging ? 'grabbing' : 'grab',
                 touchAction: 'none',
                 transition: 'width 0.4s cubic-bezier(.4,0,.2,1), height 0.7s cubic-bezier(.4,0,.2,1)'
@@ -342,7 +342,7 @@ function ImageUploadEdit() {
               </div>
             </div>
           </div>
-          <div className="flex items-center gap-2 mt-2">
+          <div className="flex items-center gap-2 mt-2 px-2">
             <span>density: </span>
             <Slider
               value={[density]} // <-- Controlled value
@@ -353,7 +353,7 @@ function ImageUploadEdit() {
               className="p-4 pr-0"
             />
           </div>
-          <div className="flex items-center gap-2 mt-3">
+          <div className="flex items-center gap-2 mt-3 px-2">
             <span>background: </span>
             <input
               type="text"
@@ -367,11 +367,11 @@ function ImageUploadEdit() {
               pattern="^#[0-9A-Fa-f]{6}$"
             />
           </div>
-          <div className="flex items-center gap-6 mt-4 pt-2">
+          <div className="flex items-center gap-6 mt-4 pt-2 px-2">
             <span>chars: </span>
               <Dropdown placeholder=".:*-=+%#@" options={[".:*-=+%#@", "⠁⠂⠃⠄⠅⠆⠇", " ░▒▓█"]} value={characterSet} onSelect={(option) => setCharacterSet((option as string))}/>
           </div>
-          <div className="flex items-center gap-4 mt-4 px-1 sm:px-0">
+          <div className="flex items-center gap-4 mt-4 px-2">
             <div className="flex items-center gap-2 mt-2">
               <Checkbox checked={isCheckedColor} onChange={() => setIsCheckedColor(!isCheckedColor)}/>
               <span>color?</span>

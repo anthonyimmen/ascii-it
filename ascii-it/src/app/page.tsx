@@ -12,7 +12,7 @@ export default function Home() {
         alignItems: 'center',
         background: 'var(--background)',
         color: 'var(--foreground)',
-        padding: "1rem",
+        padding: "1rem .5rem",
         overflow: "auto"
       }}
     >
