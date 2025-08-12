@@ -246,7 +246,7 @@ function ImageUploadEdit() {
           <div className="flex flex-col-reverse justify-center items-center align-center gap-2">
             <div
               ref={containerRef}
-              className="relative"
+              className="relative overflow-hidden"
               style={{
                 backgroundColor: "#292929",
                 width: isCheckedTwitterBanner ? "min(500px, 90vw)" : "min(400px, 90vw)",
