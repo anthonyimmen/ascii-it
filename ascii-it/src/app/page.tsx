@@ -5,7 +5,7 @@ export default function Home() {
   return (
     <div
       style={{
-        minHeight: "100vh",
+        minHeight: "100dvh",
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'center',
@@ -13,7 +13,7 @@ export default function Home() {
         background: 'var(--background)',
         color: 'var(--foreground)',
         padding: "1rem .5rem",
-        overflow: "auto"
+        overflow: "auto",
       }}
     >
       <div style={{ width: '100%', maxWidth: 320, display: 'flex', justifyContent: 'center' }}>
