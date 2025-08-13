@@ -274,7 +274,7 @@ function ImageUploadEdit() {
               style={{
                 backgroundColor: "#292929",
                 width: isCheckedTwitterBanner ? "min(500px, 90vw)" : "min(400px, 90vw)",
-                height: isCheckedTwitterBanner ? "min(166.67px, 30vh)" : "min(400px, 60vh)",
+                height: isCheckedTwitterBanner ? "min(125px, 22.5vh)" : "min(400px, 60vh)",
                 borderRadius: 3,
                 border: "dashed #cececeff 1px",
                 cursor: isDragging ? 'grabbing' : 'grab',
