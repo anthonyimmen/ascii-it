@@ -19,7 +19,7 @@ function ImageUploadEdit() {
   const [viewOriginal, setViewOriginal] = useState(true); 
   const [characterSet, setCharacterSet] = useState(".:*-=+%#@");
   const [density, setDensity] = useState(50);
-  const [contrast, setContrast] = useState(2)
+  const [contrast, setContrast] = useState(3)
 
   // Zoom and pan state
   const [zoom, setZoom] = useState(1);
@@ -53,6 +53,12 @@ function ImageUploadEdit() {
       setAsciiPreviewUrl(null);
     }
   }, [asciiImage]);
+
+  useEffect(() => {
+    if (isCheckedTwitterBanner) {
+      setPan({x: 0, y: 0});
+    }
+  }, [isCheckedTwitterBanner])
   
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -344,7 +350,7 @@ function ImageUploadEdit() {
               }
               <div className="flex items-center justify-end align-center gap-3" >
                 <button
-                  onClick={() => setZoom(Math.min(zoom + 0.1, 5))}
+                  onClick={() => setZoom(Math.min(zoom + 0.1, 10))}
                   className="cursor-pointer px-1 text-white rounded text-lg"
                 >
                   +
@@ -383,7 +389,7 @@ function ImageUploadEdit() {
               value={[contrast]} // <-- Controlled value
               onValueChange={(value) => setContrast(value[0])} // <-- Update state
               min={1}
-              max={4}
+              max={5}
               step={.5}
               className="p-4 pr-0"
             />
