@@ -19,6 +19,7 @@ function ImageUploadEdit() {
   const [viewOriginal, setViewOriginal] = useState(true); 
   const [characterSet, setCharacterSet] = useState(".:*-=+%#@");
   const [density, setDensity] = useState(50);
+  const [contrast, setContrast] = useState(2)
 
   // Zoom and pan state
   const [zoom, setZoom] = useState(1);
@@ -212,7 +213,7 @@ function ImageUploadEdit() {
     if (!image) return;
     
     try {
-      const asciiImageFile = await imageToAscii(characterSet, isCheckedColor, true, image, backgroundColor, density);
+      const asciiImageFile = await imageToAscii(characterSet, isCheckedColor, true, image, backgroundColor, density, contrast);
       setAsciiImage(asciiImageFile);
       setViewOriginal(false); // Switch to ASCII view after generation
     } catch (error) {
@@ -373,6 +374,17 @@ function ImageUploadEdit() {
               min={1}
               max={10}
               step={1}
+              className="p-4 pr-0"
+            />
+          </div>
+          <div className="flex items-center gap-2 mt-2 px-1">
+            <span>contrast: </span>
+            <Slider
+              value={[contrast]} // <-- Controlled value
+              onValueChange={(value) => setContrast(value[0])} // <-- Update state
+              min={1}
+              max={4}
+              step={.5}
               className="p-4 pr-0"
             />
           </div>

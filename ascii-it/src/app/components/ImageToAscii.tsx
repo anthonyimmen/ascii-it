@@ -1,4 +1,4 @@
-export function imageToAscii(setType: string, color: boolean, brightness: boolean, image: File | null, backgroundColor: string = "#222222", density: number): Promise<File> {
+export function imageToAscii(setType: string, color: boolean, brightness: boolean, image: File | null, backgroundColor: string = "#222222", density: number, contrast: number): Promise<File> {
   const characterSets = [
     ".:*-=+%#@",
     "⠁⠂⠃⠄⠅⠆⠇⠈⠉⠊⠋⠌⠍⠎⠏⠐⠑⠒⠓⠔⠕⠖⠗⠘⠙⠚⠛⠜⠝⠞⠟",
@@ -60,7 +60,14 @@ export function imageToAscii(setType: string, color: boolean, brightness: boolea
           const a = pixels[pixelIndex + 3];
 
           const pixelBrightness = Math.floor((r + g + b) / 3);
-          const charIndex = Math.floor((pixelBrightness / 255) * (chars.length - 1));
+          
+          // Apply contrast enhancement to make whites brighter and darks darker
+          const normalizedBrightness = pixelBrightness / 255;
+          const contrastFactor = 1 * contrast; // Increase this value for more contrast
+          const enhancedBrightness = Math.pow(normalizedBrightness, 1 / contrastFactor);
+          const clampedBrightness = Math.max(0, Math.min(1, enhancedBrightness));
+          
+          const charIndex = Math.floor(clampedBrightness * (chars.length - 1));
           const char = chars[charIndex];
 
           let styledChar = char;
