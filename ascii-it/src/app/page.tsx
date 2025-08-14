@@ -31,10 +31,10 @@ export default function Home() {
           priority
         />
       </div>
-      <p style={{ margin: '0.25rem', fontSize: 'clamp(0.875rem, 2.5vw, 1rem)', padding: '1rem 0rem', textAlign: 'center' }}>
+      {/* <p style={{ margin: '0.25rem', fontSize: 'clamp(0.875rem, 2.5vw, 1rem)', padding: '1rem 0rem', textAlign: 'center' }}>
         just ascii it. convert an image to ascii art.
-      </p>
-      <ImageUploadEdit />
+      </p> */}
+      {/* <ImageUploadEdit /> */}
     </div>
   );
 }

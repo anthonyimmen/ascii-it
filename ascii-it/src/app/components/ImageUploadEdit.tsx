@@ -13,9 +13,9 @@ function ImageUploadEdit() {
   const [asciiImage, setAsciiImage] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [asciiPreviewUrl, setAsciiPreviewUrl] = useState<string | null>(null);
-  const [isCheckedColor, setIsCheckedColor] = useState(false);
+  const [isCheckedColor, setIsCheckedColor] = useState(true);
   const [isCheckedTwitterBanner, setIsCheckedTwitterBanner] = useState(false);
-  const [backgroundColor, setBackgroundColor] = useState("#292929");
+  const [backgroundColor, setBackgroundColor] = useState("#222222");
   const [viewOriginal, setViewOriginal] = useState(true); 
   const [characterSet, setCharacterSet] = useState(".:*-=+%#@");
   const [density, setDensity] = useState(50);
