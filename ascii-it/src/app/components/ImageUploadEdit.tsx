@@ -19,7 +19,7 @@ function ImageUploadEdit() {
   const [viewOriginal, setViewOriginal] = useState(true); 
   const [characterSet, setCharacterSet] = useState(".:*-=+%#@");
   const [density, setDensity] = useState(50);
-  const [contrast, setContrast] = useState(3)
+  const [contrast, setContrast] = useState(5)
 
   // Zoom and pan state
   const [zoom, setZoom] = useState(1);
