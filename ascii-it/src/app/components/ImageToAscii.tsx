@@ -63,8 +63,7 @@ export function imageToAscii(setType: string, color: boolean, brightness: boolea
           
           // Apply contrast enhancement to make whites brighter and darks darker
           const normalizedBrightness = pixelBrightness / 255;
-          const contrastFactor = 1 * contrast; // Increase this value for more contrast
-          const enhancedBrightness = Math.pow(normalizedBrightness, 1 / contrastFactor);
+          const enhancedBrightness = Math.pow(normalizedBrightness, 1 / contrast);
           const clampedBrightness = Math.max(0, Math.min(1, enhancedBrightness));
           
           const charIndex = Math.floor(clampedBrightness * (chars.length - 1));
