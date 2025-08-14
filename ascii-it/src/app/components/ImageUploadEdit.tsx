@@ -286,7 +286,7 @@ function ImageUploadEdit() {
                 border: "dashed #cececeff 1px",
                 cursor: isDragging ? 'grabbing' : 'grab',
                 touchAction: 'none',
-                transition: 'width 0.4s cubic-bezier(.4,0,.2,1), height 0.7s cubic-bezier(.4,0,.2,1)',
+                transition: 'width 0.7s cubic-bezier(.4,0,.2,1), height 0.7s cubic-bezier(.4,0,.2,1)',
               }}
               onMouseDown={handleMouseDown}
               onMouseMove={handleMouseMove}
@@ -330,7 +330,7 @@ function ImageUploadEdit() {
               }
             </div>
           </div>
-          <div className='flex justify-between items-center align-center mt-4 mx-auto' style={{width: isCheckedTwitterBanner ? "min(500px, 90vw)" : "min(400px, 90vw)", transition: 'width 0.7s cubic-bezier(.4,0,.2,1), height 0.4s cubic-bezier(.4,0,.2,1)'}}>
+          <div className='flex justify-between items-center align-center mt-4 mx-auto' style={{width: isCheckedTwitterBanner ? "min(500px, 90vw)" : "min(400px, 90vw)", transition: 'width 0.7s cubic-bezier(.4,0,.2,1), height 0.7s cubic-bezier(.4,0,.2,1)'}}>
             <div className='flex flex-col gap-2 justify-center align-center' style={{maxWidth: "300px"}}>
               <span className="text-sm text-gray-400">File: {displayFile?.name}</span>
               <span className="text-sm text-gray-400">File Size: {displayFile ? Math.round(displayFile.size / 1024 / 1024) : 0} MB</span>
