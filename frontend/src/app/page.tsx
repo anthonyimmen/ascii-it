@@ -1,5 +1,6 @@
 import Image from 'next/image';
 import ImageUploadEdit from './components/ImageUploadEdit';
+import ImageGallery from './components/ImageGallery';
 
 export default function Home() {
   return (
@@ -35,6 +36,7 @@ export default function Home() {
         just ascii it. convert an image to ascii art.
       </p>
       <ImageUploadEdit />
+      <ImageGallery />
     </div>
   );
 }
