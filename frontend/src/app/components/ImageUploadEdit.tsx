@@ -134,6 +134,31 @@ function ImageUploadEdit() {
     setPan({ x: 0, y: 0 });
   };
 
+  // Fill container with image
+  const fillContainer = () => {
+    if (!imageRef.current || !containerRef.current) return;
+    
+    const img = imageRef.current;
+    const container = containerRef.current;
+    const containerRect = container.getBoundingClientRect();
+    
+    const imageAspectRatio = img.naturalWidth / img.naturalHeight;
+    const containerAspectRatio = containerRect.width / containerRect.height;
+    
+    // Calculate zoom to fill the container completely
+    let fillZoom;
+    if (imageAspectRatio > containerAspectRatio) {
+      // Image is wider - scale to container height
+      fillZoom = containerRect.height / (containerRect.width / imageAspectRatio);
+    } else {
+      // Image is taller - scale to container width  
+      fillZoom = containerRect.width / (containerRect.height * imageAspectRatio);
+    }
+    
+    setZoom(fillZoom + .07);
+    setPan({ x: 0, y: 0 });
+  };
+
   // Download the current view of the image
   const downloadImage = useCallback(() => {
     if (!imageRef.current || !canvasRef.current || !displayImageUrl) return;
@@ -281,7 +306,7 @@ function ImageUploadEdit() {
               style={{
                 backgroundColor: "#292929",
                 width: isCheckedTwitterBanner ? "min(500px, 90vw)" : "min(400px, 90vw)",
-                height: isCheckedTwitterBanner ? "min(125px, 22.5vh)" : "min(400px, 60vh)",
+                height: isCheckedTwitterBanner ? "min(125px, 22vh)" : "min(400px, 60vh)",
                 borderRadius: 3,
                 border: "dashed #cececeff 1px",
                 cursor: isDragging ? 'grabbing' : 'grab',
@@ -360,6 +385,14 @@ function ImageUploadEdit() {
                   className="cursor-pointer px-1 text-white rounded text-lg"
                 >
                   -
+                </button>
+                <button
+                  onClick={fillContainer}
+                  className="cursor-pointer px-1 text-white rounded text-lg"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                  </svg>
                 </button>
                 <button
                   onClick={resetZoom}
