@@ -26,7 +26,7 @@ function getMimeType(filename) {
   return mimeTypes[ext] || 'application/octet-stream';
 }
 
-function loadImages() {
+function loadImages(skipClosing = false) {
   console.log('Loading images from:', imagesDir);
   
   if (!fs.existsSync(imagesDir)) {
@@ -82,16 +82,21 @@ function loadImages() {
   });
 }
 
-// Run the script
-loadImages();
+// Export for module usage
+module.exports = { loadImages };
 
-// Close database connection after a delay to allow all operations to complete
-setTimeout(() => {
-  db.close((err) => {
-    if (err) {
-      console.error('Error closing database:', err);
-    } else {
-      console.log('Database connection closed');
-    }
-  });
-}, 2000);
+// If run directly as script
+if (require.main === module) {
+  loadImages();
+  
+  // Close database connection after a delay to allow all operations to complete
+  setTimeout(() => {
+    db.close((err) => {
+      if (err) {
+        console.error('Error closing database:', err);
+      } else {
+        console.log('Database connection closed');
+      }
+    });
+  }, 2000);
+}

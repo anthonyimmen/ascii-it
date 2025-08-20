@@ -6,6 +6,27 @@ const { v4: uuidv4 } = require('uuid');
 const db = require('./database');
 const app = express();
 
+// Auto-load images on startup if images table is empty
+function autoLoadImages() {
+  db.get('SELECT COUNT(*) as count FROM images', [], (err, row) => {
+    if (err) {
+      console.error('Error checking images table:', err);
+      return;
+    }
+    
+    if (row.count === 0) {
+      console.log('Images table is empty, auto-loading images from filesystem...');
+      const { loadImages } = require('./load-images');
+      loadImages();
+    } else {
+      console.log(`Found ${row.count} existing images in database`);
+    }
+  });
+}
+
+// Initialize auto-loading after database connection
+setTimeout(autoLoadImages, 1000);
+
 // CORS middleware
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');
