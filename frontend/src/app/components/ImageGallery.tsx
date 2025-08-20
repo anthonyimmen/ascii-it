@@ -121,7 +121,7 @@ export default function ImageGallery({ refreshTrigger }: ImageGalleryProps) {
         padding: '0.25rem',
         paddingBottom: '0'
       }}>
-        Recently Generated
+        recently generated
       </h3>
       <div 
         style={{
