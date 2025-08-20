@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 
 interface ImageData {
@@ -21,8 +21,6 @@ export default function ImageGallery({ refreshTrigger }: ImageGalleryProps) {
   const [images, setImages] = useState<ImageData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [imagesLoaded, setImagesLoaded] = useState(0);
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const fetchImages = async () => {
@@ -33,7 +31,6 @@ export default function ImageGallery({ refreshTrigger }: ImageGalleryProps) {
         }
         const data = await response.json();
         setImages(data.images || []);
-        setImagesLoaded(0); // Reset counter for new images
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load images');
       } finally {
@@ -44,67 +41,6 @@ export default function ImageGallery({ refreshTrigger }: ImageGalleryProps) {
     fetchImages();
   }, [refreshTrigger]);
 
-  useEffect(() => {
-    // Only start animation when all images are loaded
-    if (images.length === 0 || !scrollContainerRef.current || imagesLoaded < images.length) return;
-
-    const container = scrollContainerRef.current;
-    let scrollPosition = 0;
-    const scrollSpeed = 0.5; // pixels per frame
-
-    // Add a small delay to ensure images are fully rendered
-    const startAnimation = () => {
-      const animate = () => {
-        scrollPosition += scrollSpeed;
-        
-        // Calculate the width of one complete set of images
-        // Check screen size for responsive image width
-        const screenWidth = window.innerWidth;
-        let imageWidth;
-        if (screenWidth < 640) {
-          imageWidth = 120; // Mobile
-        } else if (screenWidth < 1024) {
-          imageWidth = 180; // Tablet/Medium
-        } else {
-          imageWidth = 240; // Desktop
-        }
-        const itemWidth = imageWidth + 8; // image width + gap (0.5rem = 8px)
-        const totalWidth = images.length * itemWidth;
-        
-        // Reset position when we've scrolled through one complete set
-        if (scrollPosition >= totalWidth) {
-          scrollPosition = 0;
-        }
-        
-        container.scrollLeft = scrollPosition;
-        requestAnimationFrame(animate);
-      };
-
-      const animationId = requestAnimationFrame(animate);
-      return animationId;
-    };
-
-    const timeoutId = setTimeout(() => {
-      const animationId = startAnimation();
-      
-      return () => {
-        cancelAnimationFrame(animationId);
-      };
-    }, 500); // Wait 500ms for images to settle
-
-    return () => {
-      clearTimeout(timeoutId);
-    };
-  }, [images, imagesLoaded]);
-
-  const handleImageLoad = () => {
-    setImagesLoaded(prev => prev + 1);
-  };
-
-  const handleImageError = () => {
-    // Still count as "loaded" so animation can start
-    setImagesLoaded(prev => prev + 1);
-  };
 
   if (loading) {
     return (
@@ -188,19 +124,17 @@ export default function ImageGallery({ refreshTrigger }: ImageGalleryProps) {
         Recently Generated
       </h3>
       <div 
-        ref={scrollContainerRef}
         style={{
           display: 'flex',
           gap: '0.5rem',
-          overflowX: 'hidden',
+          overflowX: 'auto',
           padding: '0.25rem',
           scrollbarWidth: 'none'
         }}
       >
-        {/* Duplicate images for seamless loop */}
-        {[...images, ...images, ...images].map((image, index) => (
+        {images.map((image) => (
           <div
-            key={`${image.id}-${index}`}
+            key={image.id}
             className="gallery-image"
             style={{
               flexShrink: 0,
@@ -227,8 +161,6 @@ export default function ImageGallery({ refreshTrigger }: ImageGalleryProps) {
               unoptimized
               placeholder="blur"
               blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R+JNHmsx2WlNrtyRZXC4YjlYH7KIYBklNKAYxhJ0xCAxBcDKEOp0xg6peD9eOhczQCM7zC2B9cEOp7K6FKn5y2GxEEIyTbQVEQtjCKmWj/2Q=="
-              onLoad={handleImageLoad}
-              onError={handleImageError}
             />
           </div>
         ))}
