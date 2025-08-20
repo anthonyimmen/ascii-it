@@ -8,7 +8,11 @@ import Dropdown from './Dropdown';
 
 // TODO: begin top 10-15 recently generated images being shown, add back touch image panning in window
 
-function ImageUploadEdit() {
+interface ImageUploadEditProps {
+  onImageUploaded?: () => void;
+}
+
+function ImageUploadEdit({ onImageUploaded }: ImageUploadEditProps) {
   const [image, setImage] = useState<File | null>(null);
   const [asciiImage, setAsciiImage] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -247,6 +251,24 @@ function ImageUploadEdit() {
       const asciiImageFile = await imageToAscii(characterSet, isCheckedColor, true, image, backgroundColor, density, contrast);
       setAsciiImage(asciiImageFile);
       setViewOriginal(false); // Switch to ASCII view after generation
+      
+      // Upload the generated ASCII image to backend
+      const formData = new FormData();
+      formData.append('image', asciiImageFile);
+      
+      const response = await fetch('http://localhost:3000/api/images', {
+        method: 'PUT',
+        body: formData,
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        console.log('ASCII image uploaded successfully:', result);
+        // Trigger refresh of image gallery
+        onImageUploaded?.();
+      } else {
+        console.error('Failed to upload ASCII image:', response.statusText);
+      }
     } catch (error) {
       console.error('Error converting to ASCII:', error);
     }

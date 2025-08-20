@@ -1,8 +1,12 @@
+'use client';
+
 import Image from 'next/image';
 import ImageUploadEdit from './components/ImageUploadEdit';
 import ImageGallery from './components/ImageGallery';
+import { useImageRefresh } from './hooks/useImageRefresh';
 
 export default function Home() {
+  const { refreshTrigger, triggerRefresh } = useImageRefresh();
   return (
     <div
       style={{
@@ -42,9 +46,9 @@ export default function Home() {
         <p style={{ margin: '0.25rem', fontSize: 'clamp(0.875rem, 2.5vw, 1rem)', padding: '1rem 0rem', textAlign: 'center' }}>
           just ascii it. convert an image to ascii art.
         </p>
-        <ImageUploadEdit />
+        <ImageUploadEdit onImageUploaded={triggerRefresh} />
       </div>
-      <ImageGallery />
+      <ImageGallery refreshTrigger={refreshTrigger} />
     </div>
   );
 }

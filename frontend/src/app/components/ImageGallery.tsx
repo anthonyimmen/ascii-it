@@ -13,10 +13,15 @@ interface ImageData {
   created_at: string;
 }
 
-export default function ImageGallery() {
+interface ImageGalleryProps {
+  refreshTrigger?: number;
+}
+
+export default function ImageGallery({ refreshTrigger }: ImageGalleryProps) {
   const [images, setImages] = useState<ImageData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [imagesLoaded, setImagesLoaded] = useState(0);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -28,6 +33,7 @@ export default function ImageGallery() {
         }
         const data = await response.json();
         setImages(data.images || []);
+        setImagesLoaded(0); // Reset counter for new images
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load images');
       } finally {
@@ -36,37 +42,59 @@ export default function ImageGallery() {
     };
 
     fetchImages();
-  }, []);
+  }, [refreshTrigger]);
 
   useEffect(() => {
-    if (images.length === 0 || !scrollContainerRef.current) return;
+    // Only start animation when all images are loaded
+    if (images.length === 0 || !scrollContainerRef.current || imagesLoaded < images.length) return;
 
     const container = scrollContainerRef.current;
     let scrollPosition = 0;
     const scrollSpeed = 0.5; // pixels per frame
 
-    const animate = () => {
-      scrollPosition += scrollSpeed;
-      
-      // Calculate the width of one complete set of images
-      const itemWidth = 120 + 8; // image width + gap (0.5rem = 8px)
-      const totalWidth = images.length * itemWidth;
-      
-      // Reset position when we've scrolled through one complete set
-      if (scrollPosition >= totalWidth) {
-        scrollPosition = 0;
-      }
-      
-      container.scrollLeft = scrollPosition;
-      requestAnimationFrame(animate);
+    // Add a small delay to ensure images are fully rendered
+    const startAnimation = () => {
+      const animate = () => {
+        scrollPosition += scrollSpeed;
+        
+        // Calculate the width of one complete set of images
+        const itemWidth = 120 + 8; // image width + gap (0.5rem = 8px)
+        const totalWidth = images.length * itemWidth;
+        
+        // Reset position when we've scrolled through one complete set
+        if (scrollPosition >= totalWidth) {
+          scrollPosition = 0;
+        }
+        
+        container.scrollLeft = scrollPosition;
+        requestAnimationFrame(animate);
+      };
+
+      const animationId = requestAnimationFrame(animate);
+      return animationId;
     };
 
-    const animationId = requestAnimationFrame(animate);
+    const timeoutId = setTimeout(() => {
+      const animationId = startAnimation();
+      
+      return () => {
+        cancelAnimationFrame(animationId);
+      };
+    }, 500); // Wait 500ms for images to settle
 
     return () => {
-      cancelAnimationFrame(animationId);
+      clearTimeout(timeoutId);
     };
-  }, [images]);
+  }, [images, imagesLoaded]);
+
+  const handleImageLoad = () => {
+    setImagesLoaded(prev => prev + 1);
+  };
+
+  const handleImageError = () => {
+    // Still count as "loaded" so animation can start
+    setImagesLoaded(prev => prev + 1);
+  };
 
   if (loading) {
     return (
@@ -150,19 +178,25 @@ export default function ImageGallery() {
               overflow: 'hidden',
               backgroundColor: 'rgba(255, 255, 255, 0.05)',
               border: '1px solid rgba(255, 255, 255, 0.1)',
+              position: 'relative'
             }}
           >
             <Image
               src={`http://localhost:3000/images/${image.filename}`}
               alt={image.original_name}
-              width={60}
-              height={60}
+              width={120}
+              height={120}
               style={{
                 width: '100%',
                 height: '100%',
                 objectFit: 'cover'
               }}
+              loading="eager"
               unoptimized
+              placeholder="blur"
+              blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R+JNHmsx2WlNrtyRZXC4YjlYH7KIYBklNKAYxhJ0xCAxBcDKEOp0xg6peD9eOhczQCM7zC2B9cEOp7K6FKn5y2GxEEIyTbQVEQtjCKmWj/2Q=="
+              onLoad={handleImageLoad}
+              onError={handleImageError}
             />
           </div>
         ))}
