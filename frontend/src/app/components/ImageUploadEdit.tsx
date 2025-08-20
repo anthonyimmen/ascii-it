@@ -455,7 +455,7 @@ function ImageUploadEdit() {
               <span>twitter banner?</span>
             </div>
           </div>
-          <div className='flex flex-row justify-center items-center gap-4 mt-5'>
+          <div className='flex flex-row justify-center items-center gap-4 mt-5 mb-3'>
             <label
               htmlFor="image-upload"
               className="cursor-pointer px-2 pb-1 text-white transition flex flex-row items-center justify-center gap-2"

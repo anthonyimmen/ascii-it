@@ -73,7 +73,7 @@ export default function ImageGallery() {
       <div style={{ 
         width: '100%', 
         padding: '2rem', 
-        textAlign: 'center',
+        textAlign: 'left',
         fontSize: '0.875rem',
         color: 'var(--foreground)'
       }}>
@@ -87,7 +87,7 @@ export default function ImageGallery() {
       <div style={{ 
         width: '100%', 
         padding: '2rem', 
-        textAlign: 'center',
+        textAlign: 'left',
         fontSize: '0.875rem',
         color: 'var(--foreground)'
       }}>
@@ -101,7 +101,7 @@ export default function ImageGallery() {
       <div style={{ 
         width: '100%', 
         padding: '2rem', 
-        textAlign: 'center',
+        textAlign: 'left',
         fontSize: '0.875rem',
         color: 'var(--foreground)'
       }}>
@@ -139,7 +139,7 @@ export default function ImageGallery() {
         }}
       >
         {/* Duplicate images for seamless loop */}
-        {[...images, ...images].map((image, index) => (
+        {[...images, ...images, ...images].map((image, index) => (
           <div
             key={`${image.id}-${index}`}
             style={{
