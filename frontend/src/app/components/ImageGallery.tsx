@@ -58,7 +58,17 @@ export default function ImageGallery({ refreshTrigger }: ImageGalleryProps) {
         scrollPosition += scrollSpeed;
         
         // Calculate the width of one complete set of images
-        const itemWidth = 120 + 8; // image width + gap (0.5rem = 8px)
+        // Check screen size for responsive image width
+        const screenWidth = window.innerWidth;
+        let imageWidth;
+        if (screenWidth < 640) {
+          imageWidth = 120; // Mobile
+        } else if (screenWidth < 1024) {
+          imageWidth = 180; // Tablet/Medium
+        } else {
+          imageWidth = 240; // Desktop
+        }
+        const itemWidth = imageWidth + 8; // image width + gap (0.5rem = 8px)
         const totalWidth = images.length * itemWidth;
         
         // Reset position when we've scrolled through one complete set
@@ -139,12 +149,33 @@ export default function ImageGallery({ refreshTrigger }: ImageGalleryProps) {
   }
 
   return (
-    <div style={{ 
-      width: '100%', 
-      padding: '1rem 0.5rem 0.5rem',
-      borderTop: '1px solid rgba(255, 255, 255, 0.1)',
-      marginTop: 'auto'
-    }}>
+    <>
+      <style jsx>{`
+        .gallery-image {
+          width: 120px !important;
+          height: 120px !important;
+        }
+        
+        @media (min-width: 640px) {
+          .gallery-image {
+            width: 180px !important;
+            height: 180px !important;
+          }
+        }
+        
+        @media (min-width: 1024px) {
+          .gallery-image {
+            width: 240px !important;
+            height: 240px !important;
+          }
+        }
+      `}</style>
+      <div style={{ 
+        width: '100%', 
+        padding: '1rem 0.5rem 0.5rem',
+        borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+        marginTop: 'auto'
+      }}>
       <h3 style={{ 
         textAlign: 'left', 
         marginBottom: '0.75rem',
@@ -170,6 +201,7 @@ export default function ImageGallery({ refreshTrigger }: ImageGalleryProps) {
         {[...images, ...images, ...images].map((image, index) => (
           <div
             key={`${image.id}-${index}`}
+            className="gallery-image"
             style={{
               flexShrink: 0,
               width: '120px',
@@ -184,8 +216,8 @@ export default function ImageGallery({ refreshTrigger }: ImageGalleryProps) {
             <Image
               src={`http://localhost:3000/images/${image.filename}`}
               alt={image.original_name}
-              width={120}
-              height={120}
+              width={240}
+              height={240}
               style={{
                 width: '100%',
                 height: '100%',
@@ -202,5 +234,6 @@ export default function ImageGallery({ refreshTrigger }: ImageGalleryProps) {
         ))}
       </div>
     </div>
+    </>
   );
 }
