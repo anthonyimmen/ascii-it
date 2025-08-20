@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 
 interface ImageData {
@@ -17,6 +17,7 @@ export default function ImageGallery() {
   const [images, setImages] = useState<ImageData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const fetchImages = async () => {
@@ -36,6 +37,36 @@ export default function ImageGallery() {
 
     fetchImages();
   }, []);
+
+  useEffect(() => {
+    if (images.length === 0 || !scrollContainerRef.current) return;
+
+    const container = scrollContainerRef.current;
+    let scrollPosition = 0;
+    const scrollSpeed = 0.5; // pixels per frame
+
+    const animate = () => {
+      scrollPosition += scrollSpeed;
+      
+      // Calculate the width of one complete set of images
+      const itemWidth = 120 + 8; // image width + gap (0.5rem = 8px)
+      const totalWidth = images.length * itemWidth;
+      
+      // Reset position when we've scrolled through one complete set
+      if (scrollPosition >= totalWidth) {
+        scrollPosition = 0;
+      }
+      
+      container.scrollLeft = scrollPosition;
+      requestAnimationFrame(animate);
+    };
+
+    const animationId = requestAnimationFrame(animate);
+
+    return () => {
+      cancelAnimationFrame(animationId);
+    };
+  }, [images]);
 
   if (loading) {
     return (
@@ -82,42 +113,50 @@ export default function ImageGallery() {
   return (
     <div style={{ 
       width: '100%', 
-      padding: '2rem 1rem',
-      borderTop: '1px solid rgba(255, 255, 255, 0.1)'
+      padding: '1rem 0.5rem 0.5rem',
+      borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+      marginTop: 'auto'
     }}>
       <h3 style={{ 
-        textAlign: 'center', 
-        marginBottom: '1.5rem',
-        fontSize: '1.125rem',
-        fontWeight: '600'
+        textAlign: 'left', 
+        marginBottom: '0.75rem',
+        fontSize: '0.875rem',
+        fontWeight: '500',
+        opacity: '0.8',
+        padding: '0.25rem',
+        paddingBottom: '0'
       }}>
-        Recent Images
+        Recently Generated
       </h3>
-      <div style={{
-        display: 'flex',
-        gap: '1rem',
-        overflowX: 'auto',
-        padding: '0.5rem',
-        scrollbarWidth: 'thin'
-      }}>
-        {images.map((image) => (
+      <div 
+        ref={scrollContainerRef}
+        style={{
+          display: 'flex',
+          gap: '0.5rem',
+          overflowX: 'hidden',
+          padding: '0.25rem',
+          scrollbarWidth: 'none'
+        }}
+      >
+        {/* Duplicate images for seamless loop */}
+        {[...images, ...images].map((image, index) => (
           <div
-            key={image.id}
+            key={`${image.id}-${index}`}
             style={{
               flexShrink: 0,
               width: '120px',
               height: '120px',
-              borderRadius: '8px',
+              borderRadius: '6px',
               overflow: 'hidden',
               backgroundColor: 'rgba(255, 255, 255, 0.05)',
-              border: '1px solid rgba(255, 255, 255, 0.1)'
+              border: '1px solid rgba(255, 255, 255, 0.1)',
             }}
           >
             <Image
               src={`http://localhost:3000/images/${image.filename}`}
               alt={image.original_name}
-              width={120}
-              height={120}
+              width={60}
+              height={60}
               style={{
                 width: '100%',
                 height: '100%',
