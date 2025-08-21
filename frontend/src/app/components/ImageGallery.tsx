@@ -21,6 +21,11 @@ export default function ImageGallery({ refreshTrigger }: ImageGalleryProps) {
   const [images, setImages] = useState<ImageData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [loadedImages, setLoadedImages] = useState<Set<number>>(new Set());
+
+  const handleImageLoad = (imageId: number) => {
+    setLoadedImages(prev => new Set(prev).add(imageId));
+  };
 
   useEffect(() => {
     const fetchImages = async () => {
@@ -31,9 +36,10 @@ export default function ImageGallery({ refreshTrigger }: ImageGalleryProps) {
         }
         const data = await response.json();
         setImages(data.images || []);
+        setLoadedImages(new Set());
+        setLoading(false);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load images');
-      } finally {
         setLoading(false);
       }
     };
@@ -98,13 +104,7 @@ export default function ImageGallery({ refreshTrigger }: ImageGalleryProps) {
             height: 180px !important;
           }
         }
-        
-        @media (min-width: 1024px) {
-          .gallery-image {
-            width: 240px !important;
-            height: 240px !important;
-          }
-        }
+
       `}</style>
       <div style={{ 
         width: '100%', 
@@ -132,38 +132,43 @@ export default function ImageGallery({ refreshTrigger }: ImageGalleryProps) {
           scrollbarWidth: 'none'
         }}
       >
-        {images.map((image) => (
-          <div
-            key={image.id}
-            className="gallery-image"
-            style={{
-              flexShrink: 0,
-              width: '120px',
-              height: '120px',
-              borderRadius: '6px',
-              overflow: 'hidden',
-              backgroundColor: 'rgba(255, 255, 255, 0.05)',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-              position: 'relative'
-            }}
-          >
-            <Image
-              src={`http://localhost:3000/images/${image.filename}`}
-              alt={image.original_name}
-              width={240}
-              height={240}
+{images.map((image) => {
+          const isLoaded = loadedImages.has(image.id);
+          return (
+            <div
+              key={image.id}
+              className="gallery-image"
               style={{
-                width: '100%',
-                height: '100%',
-                objectFit: 'cover'
+                flexShrink: 0,
+                width: '120px',
+                height: '120px',
+                borderRadius: '6px',
+                overflow: 'hidden',
+                backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                position: 'relative',
+                opacity: isLoaded ? 1 : 0,
+                transition: 'opacity 0.2s ease-in-out'
               }}
-              loading="eager"
-              unoptimized
-              placeholder="blur"
-              blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R+JNHmsx2WlNrtyRZXC4YjlYH7KIYBklNKAYxhJ0xCAxBcDKEOp0xg6peD9eOhczQCM7zC2B9cEOp7K6FKn5y2GxEEIyTbQVEQtjCKmWj/2Q=="
-            />
-          </div>
-        ))}
+            >
+              <Image
+                src={`http://localhost:3000/images/${image.filename}`}
+                alt={image.original_name}
+                width={120}
+                height={120}
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover'
+                }}
+                loading="eager"
+                unoptimized
+                priority
+                onLoad={() => handleImageLoad(image.id)}
+              />
+            </div>
+          );
+        })}
       </div>
     </div>
     </>
