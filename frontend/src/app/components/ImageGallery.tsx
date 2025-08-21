@@ -35,8 +35,16 @@ export default function ImageGallery({ refreshTrigger }: ImageGalleryProps) {
           throw new Error('Failed to fetch images');
         }
         const data = await response.json();
-        setImages(data.images || []);
-        setLoadedImages(new Set());
+        const newImages = data.images || [];
+        setImages(newImages);
+        
+        // Only reset loaded images if we have a different set of images
+        setLoadedImages(prev => {
+          const currentImageIds = new Set(newImages.map((img: ImageData) => img.id));
+          const filteredLoaded = new Set(Array.from(prev).filter(id => currentImageIds.has(id)));
+          return filteredLoaded;
+        });
+        
         setLoading(false);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load images');
