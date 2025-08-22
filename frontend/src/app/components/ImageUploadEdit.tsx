@@ -85,51 +85,40 @@ function ImageUploadEdit({ onImageUploaded }: ImageUploadEditProps) {
         const zoomedWidth = displayWidth * zoom;
         const zoomedHeight = displayHeight * zoom;
         
-        // Calculate the visible portion based on pan and zoom
+        // The viewport shows the entire container, so we need to capture exactly what's visible
+        // regardless of zoom and pan
+        
+        // Set canvas dimensions for ASCII generation based on container size and density
+        const minDensity = 1;
+        const maxDensity = 10;
+        const densityFactor = Math.max(minDensity, Math.min(density, maxDensity));
+        
+        // ASCII dimensions should match the container viewport
+        // Adjust for ASCII character aspect ratio (characters are typically taller than wide)
+        const asciiWidth = Math.floor(containerWidth * densityFactor / 10);
+        const asciiHeight = Math.floor(containerHeight * densityFactor / 30); // Adjusted ratio to reduce vertical stretch
+        
+        canvas.width = asciiWidth;
+        canvas.height = asciiHeight;
+        
+        // Create a temporary canvas that matches the container size
+        const viewportCanvas = document.createElement('canvas');
+        const viewportCtx = viewportCanvas.getContext('2d');
+        viewportCanvas.width = containerWidth;
+        viewportCanvas.height = containerHeight;
+        
+        // Calculate where to draw the image in the viewport canvas (same as display logic)
         const centerX = containerWidth / 2;
         const centerY = containerHeight / 2;
         
         const imageLeft = centerX - zoomedWidth / 2 + pan.x;
         const imageTop = centerY - zoomedHeight / 2 + pan.y;
         
-        // Calculate visible bounds
-        const visibleLeft = Math.max(0, -imageLeft);
-        const visibleTop = Math.max(0, -imageTop);
-        const visibleRight = Math.min(zoomedWidth, containerWidth - imageLeft);
-        const visibleBottom = Math.min(zoomedHeight, containerHeight - imageTop);
+        // Draw the full image at the zoomed and panned position
+        viewportCtx!.drawImage(img, imageLeft, imageTop, zoomedWidth, zoomedHeight);
         
-        const visibleWidth = visibleRight - visibleLeft;
-        const visibleHeight = visibleBottom - visibleTop;
-        
-        if (visibleWidth <= 0 || visibleHeight <= 0) {
-          resolve(''); // Image is not visible
-          return;
-        }
-        
-        // Set canvas dimensions for ASCII generation based on density
-        const minDensity = 1;
-        const maxDensity = 10;
-        const densityFactor = Math.max(minDensity, Math.min(density, maxDensity));
-        
-        // Scale ASCII resolution based on visible area and density
-        const asciiWidth = Math.floor(visibleWidth * densityFactor / 10);
-        const asciiHeight = Math.floor(visibleHeight * densityFactor / 20); // Half height for ASCII aspect ratio
-        
-        canvas.width = asciiWidth;
-        canvas.height = asciiHeight;
-        
-        // Calculate source coordinates in the original image
-        const sourceLeft = (visibleLeft / zoomedWidth) * img.naturalWidth;
-        const sourceTop = (visibleTop / zoomedHeight) * img.naturalHeight;
-        const sourceWidth = (visibleWidth / zoomedWidth) * img.naturalWidth;
-        const sourceHeight = (visibleHeight / zoomedHeight) * img.naturalHeight;
-        
-        // Draw the visible portion of the image to canvas
-        ctx!.drawImage(
-          img,
-          sourceLeft, sourceTop, sourceWidth, sourceHeight,
-          0, 0, canvas.width, canvas.height
-        );
+        // Now scale the viewport canvas to ASCII resolution
+        ctx!.drawImage(viewportCanvas, 0, 0, containerWidth, containerHeight, 0, 0, asciiWidth, asciiHeight);
         
         // Get image data
         const imageData = ctx!.getImageData(0, 0, canvas.width, canvas.height);
