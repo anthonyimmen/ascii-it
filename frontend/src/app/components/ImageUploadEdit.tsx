@@ -24,6 +24,8 @@ function ImageUploadEdit({ onImageUploaded }: ImageUploadEditProps) {
   const [characterSet, setCharacterSet] = useState(".:*-=+%#@");
   const [density, setDensity] = useState(50);
   const [contrast, setContrast] = useState(5)
+  const [asciiText, setAsciiText] = useState<string | null>(null);
+  const [copyState, setCopyState] = useState<'copy' | 'copied'>('copy');
 
   // Zoom and pan state
   const [zoom, setZoom] = useState(1);
@@ -34,6 +36,153 @@ function ImageUploadEdit({ onImageUploaded }: ImageUploadEditProps) {
   const imageRef = useRef<HTMLImageElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  // Function to generate ASCII text only (no image file) - respects zoom and pan
+  const generateAsciiText = (image: File, characterSet: string, density: number, contrast: number): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      if (!containerRef.current) {
+        reject(new Error('Container not available'));
+        return;
+      }
+
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const img = new Image();
+      
+      img.onload = function() {
+        // Map character set
+        let chars = characterSet;
+        if (characterSet === ".:*-=+%#@") {
+          chars = ".:*-=+%#@";
+        } else if (characterSet === "⠁⠂⠃⠄⠅⠆⠇") {
+          chars = "⠁⠂⠃⠄⠅⠆⠇⠈⠉⠊⠋⠌⠍⠎⠏⠐⠑⠒⠓⠔⠕⠖⠗⠘⠙⠚⠛⠜⠝⠞⠟";
+        } else {
+          chars = " ░▒▓█";
+        }
+        
+        // Get container dimensions
+        const container = containerRef.current!;
+        const containerRect = container.getBoundingClientRect();
+        const containerWidth = containerRect.width;
+        const containerHeight = containerRect.height;
+        
+        // Calculate the display size of the image in the container
+        const imageAspectRatio = img.naturalWidth / img.naturalHeight;
+        const containerAspectRatio = containerWidth / containerHeight;
+        
+        let displayWidth, displayHeight;
+        if (imageAspectRatio > containerAspectRatio) {
+          // Image is wider than container
+          displayWidth = containerWidth;
+          displayHeight = containerWidth / imageAspectRatio;
+        } else {
+          // Image is taller than container
+          displayHeight = containerHeight;
+          displayWidth = containerHeight * imageAspectRatio;
+        }
+        
+        // Apply zoom to the display dimensions
+        const zoomedWidth = displayWidth * zoom;
+        const zoomedHeight = displayHeight * zoom;
+        
+        // Calculate the visible portion based on pan and zoom
+        const centerX = containerWidth / 2;
+        const centerY = containerHeight / 2;
+        
+        const imageLeft = centerX - zoomedWidth / 2 + pan.x;
+        const imageTop = centerY - zoomedHeight / 2 + pan.y;
+        
+        // Calculate visible bounds
+        const visibleLeft = Math.max(0, -imageLeft);
+        const visibleTop = Math.max(0, -imageTop);
+        const visibleRight = Math.min(zoomedWidth, containerWidth - imageLeft);
+        const visibleBottom = Math.min(zoomedHeight, containerHeight - imageTop);
+        
+        const visibleWidth = visibleRight - visibleLeft;
+        const visibleHeight = visibleBottom - visibleTop;
+        
+        if (visibleWidth <= 0 || visibleHeight <= 0) {
+          resolve(''); // Image is not visible
+          return;
+        }
+        
+        // Set canvas dimensions for ASCII generation based on density
+        const minDensity = 1;
+        const maxDensity = 10;
+        const densityFactor = Math.max(minDensity, Math.min(density, maxDensity));
+        
+        // Scale ASCII resolution based on visible area and density
+        const asciiWidth = Math.floor(visibleWidth * densityFactor / 10);
+        const asciiHeight = Math.floor(visibleHeight * densityFactor / 20); // Half height for ASCII aspect ratio
+        
+        canvas.width = asciiWidth;
+        canvas.height = asciiHeight;
+        
+        // Calculate source coordinates in the original image
+        const sourceLeft = (visibleLeft / zoomedWidth) * img.naturalWidth;
+        const sourceTop = (visibleTop / zoomedHeight) * img.naturalHeight;
+        const sourceWidth = (visibleWidth / zoomedWidth) * img.naturalWidth;
+        const sourceHeight = (visibleHeight / zoomedHeight) * img.naturalHeight;
+        
+        // Draw the visible portion of the image to canvas
+        ctx!.drawImage(
+          img,
+          sourceLeft, sourceTop, sourceWidth, sourceHeight,
+          0, 0, canvas.width, canvas.height
+        );
+        
+        // Get image data
+        const imageData = ctx!.getImageData(0, 0, canvas.width, canvas.height);
+        const pixels = imageData.data;
+        
+        let asciiArt = '';
+        
+        // Process each pixel
+        for (let y = 0; y < canvas.height; y++) {
+          let row = '';
+          for (let x = 0; x < canvas.width; x++) {
+            const pixelIndex = (y * canvas.width + x) * 4;
+            const r = pixels[pixelIndex];
+            const g = pixels[pixelIndex + 1];
+            const b = pixels[pixelIndex + 2];
+            
+            const pixelBrightness = Math.floor((r + g + b) / 3);
+            
+            // Apply contrast enhancement
+            const normalizedBrightness = pixelBrightness / 255;
+            const enhancedBrightness = Math.pow(normalizedBrightness, 1 / contrast);
+            const clampedBrightness = Math.max(0, Math.min(1, enhancedBrightness));
+            
+            const charIndex = Math.floor(clampedBrightness * (chars.length - 1));
+            const char = chars[charIndex];
+            
+            row += char;
+          }
+          asciiArt += row + '\n';
+        }
+        
+        resolve(asciiArt);
+      };
+      
+      img.onerror = function() {
+        reject(new Error('Failed to load image'));
+      };
+      
+      // Load the image file
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        if (e.target && e.target.result) {
+          img.src = e.target.result as string;
+        } else {
+          reject(new Error('Failed to read image file'));
+        }
+      };
+      reader.onerror = function() {
+        reject(new Error('Failed to read image file'));
+      };
+      reader.readAsDataURL(image);
+    });
+  };
 
   // Cleanup URLs on unmount to prevent memory leaks
   useEffect(() => {
@@ -250,9 +399,27 @@ function ImageUploadEdit({ onImageUploaded }: ImageUploadEditProps) {
     try {
       const asciiImageFile = await imageToAscii(characterSet, isCheckedColor, true, image, backgroundColor, density, contrast);
       setAsciiImage(asciiImageFile);
+      
+      // Generate ASCII text without image file conversion
+      const asciiText = await generateAsciiText(image, characterSet, density, contrast);
+      setAsciiText(asciiText);
+      setCopyState('copy'); // Reset copy state when new image is generated
+      
       setViewOriginal(false); // Switch to ASCII view after generation
     } catch (error) {
       console.error('Error converting to ASCII:', error);
+    }
+  };
+
+  const handleCopyAscii = async () => {
+    if (!asciiText) return;
+    
+    try {
+      await navigator.clipboard.writeText(asciiText);
+      setCopyState('copied');
+      console.log('ASCII text copied to clipboard');
+    } catch (error) {
+      console.error('Failed to copy ASCII text:', error);
     }
   };
 
@@ -507,7 +674,25 @@ function ImageUploadEdit({ onImageUploaded }: ImageUploadEditProps) {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
               </button>
-               <button
+              <button
+                onClick={handleCopyAscii}
+                disabled={!asciiText}
+                className="cursor-pointer px-2 pb-1 text-white transition flex flex-row items-center justify-center gap-2 disabled:opacity-50"
+              >
+                <span className="text-md">{copyState}</span>
+                {copyState === 'copy' ? (
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                  </svg>
+                ) : (
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                )}
+              </button>
+            </div>
+            <div className='flex flex-row justify-center items-center gap-4'>
+              <button
                 onClick={handleGenerateAscii}
                 className="cursor-pointer px-2 pb-1 text-white transition flex flex-row items-center justify-center gap-2 disabled:opacity-50"
               >
@@ -518,17 +703,17 @@ function ImageUploadEdit({ onImageUploaded }: ImageUploadEditProps) {
                   className="w-4 h-4"
                 />
               </button>
+              <button
+                onClick={handlePostImage}
+                disabled={!asciiImage}
+                className="cursor-pointer px-3 py-2 text-white transition flex flex-row items-center justify-center gap-2 disabled:opacity-50 border border-white rounded-lg"
+              >
+                <span className="text-md">post</span>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                </svg>
+              </button>
             </div>
-            <button
-              onClick={handlePostImage}
-              disabled={!asciiImage}
-              className="cursor-pointer px-3 py-2 text-white transition flex flex-row items-center justify-center gap-2 disabled:opacity-50 border border-white rounded-lg"
-            >
-              <span className="text-md">post</span>
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-              </svg>
-            </button>
           </div>
         </div>
       )}
