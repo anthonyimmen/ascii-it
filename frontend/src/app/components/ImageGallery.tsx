@@ -32,7 +32,7 @@ export default function ImageGallery({ refreshTrigger }: ImageGalleryProps) {
       try {
         const response = await fetch('http://localhost:3000/api/images');
         if (!response.ok) {
-          throw new Error('Failed to fetch images');
+          throw new Error('failed to fetch generated ascii images');
         }
         const data = await response.json();
         const newImages = data.images || [];
@@ -47,7 +47,7 @@ export default function ImageGallery({ refreshTrigger }: ImageGalleryProps) {
         
         setLoading(false);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load images');
+        setError(err instanceof Error ? err.message : 'failed to load generated ascii images');
         setLoading(false);
       }
     };
@@ -65,7 +65,7 @@ export default function ImageGallery({ refreshTrigger }: ImageGalleryProps) {
         fontSize: '0.875rem',
         color: 'var(--foreground)'
       }}>
-        Loading images...
+        loading images...
       </div>
     );
   }
@@ -79,7 +79,7 @@ export default function ImageGallery({ refreshTrigger }: ImageGalleryProps) {
         fontSize: '0.875rem',
         color: 'var(--foreground)'
       }}>
-        {error}
+        failed to fetch generated ascii images...
       </div>
     );
   }
@@ -93,7 +93,7 @@ export default function ImageGallery({ refreshTrigger }: ImageGalleryProps) {
         fontSize: '0.875rem',
         color: 'var(--foreground)'
       }}>
-        No images found
+        no images found
       </div>
     );
   }

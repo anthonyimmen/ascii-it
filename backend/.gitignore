@@ -1,0 +1,8 @@
+node_modules/
+*.log
+.env
+.DS_Store
+
+# Firebase config (add when you set it up)
+# firebase-config.json
+# serviceAccountKey.json
