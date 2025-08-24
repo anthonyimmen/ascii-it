@@ -6,8 +6,6 @@ import { Checkbox } from './Checkbox';
 import { imageToAscii } from './ImageToAscii';
 import Dropdown from './Dropdown';
 
-// TODO: begin top 10-15 recently generated images being shown, add back touch image panning in window
-
 interface ImageUploadEditProps {
   onImageUploaded?: () => void;
 }
@@ -319,7 +317,7 @@ function ImageUploadEdit({ onImageUploaded }: ImageUploadEditProps) {
     const displayContainerHeight = containerRect.height;
     
     // Set canvas size to match the actual displayed container dimensions
-    const scaleFactor = 10; // High resolution multiplier
+    const scaleFactor = 2; // Reasonable resolution multiplier
     canvas.width = displayContainerWidth * scaleFactor;
     canvas.height = displayContainerHeight * scaleFactor;
 
@@ -379,7 +377,7 @@ function ImageUploadEdit({ onImageUploaded }: ImageUploadEditProps) {
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
       }
-    }, 'image/png');
+    }, 'image/jpeg', 0.9);
   }, [zoom, pan, image, isCheckedTwitterBanner]);
 
   const handleGenerateAscii = async () => {
@@ -457,18 +455,30 @@ function ImageUploadEdit({ onImageUploaded }: ImageUploadEditProps) {
       <canvas ref={canvasRef} style={{ display: 'none' }} />
       
       {/* Custom Upload Button */}
+      
       {!displayImageUrl && 
-        <label
-          htmlFor="image-upload"
-          className="cursor-pointer px-2 py-0 text-white rounded-md transition flex flex-row items-center justify-center gap-4 mb-1"
-        >
-          <span className="text-md">upload</span>
-          <img
-            src="/upload.svg"
-            alt="Upload icon"
-            className="w-8 h-8"
-          />
-        </label>
+        <div className="flex md:flex-row flex-col items-center justify-center gap-4 mb-1">
+          <div className="flex items-center">
+            <span className="text-white mr-2 pb-1">@</span>
+            <input
+              type="text"
+              className="bg-transparent text-white outline-none border-0 border-b border-white pb-1 w-38"
+              placeholder="twitter profile"
+            />
+          </div>
+          <span>or</span>
+          <label
+            htmlFor="image-upload"
+            className="cursor-pointer px-2 py-0 text-white transition flex flex-row items-center justify-center gap-2"
+          >
+            <span className="text-md">upload</span>
+            <img
+              src="/upload.svg"
+              alt="Upload icon"
+              className="w-6 h-6"
+            />
+          </label>
+        </div>
       }
 
       {/* Hidden File Input */}
@@ -544,7 +554,7 @@ function ImageUploadEdit({ onImageUploaded }: ImageUploadEditProps) {
           <div className='flex justify-between items-center align-center mt-4 mx-auto' style={{width: isCheckedTwitterBanner ? "min(500px, 90vw)" : "min(400px, 90vw)", transition: 'width 0.7s cubic-bezier(.4,0,.2,1), height 0.7s cubic-bezier(.4,0,.2,1)'}}>
             <div className='flex flex-col gap-2 justify-center align-center' style={{maxWidth: "300px"}}>
               <span className="text-sm text-gray-400">File: {displayFile?.name}</span>
-              <span className="text-sm text-gray-400">File Size: {displayFile ? Math.round(displayFile.size / 1024 / 1024) : 0} MB</span>
+              <span className="text-sm text-gray-400">File Size: {displayFile ? (displayFile.size < 1024 * 1024 ? `${Math.round(displayFile.size / 1024)} KB` : `${(displayFile.size / 1024 / 1024).toFixed(1)} MB`) : '0 KB'}</span>
             </div>
             {/* Zoom controls */}
             <div className='flex flex-col-reverse flex-end gap-2 justify-center align-center'>

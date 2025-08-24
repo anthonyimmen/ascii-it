@@ -43,6 +43,7 @@ export default function Home() {
         Log In
       </button>
       <div
+        className="content-container"
         style={{
           flex: 1,
           display: 'flex',
@@ -67,7 +68,7 @@ export default function Home() {
           />
         </div>
         <p style={{ margin: '0.25rem', fontSize: 'clamp(0.875rem, 2.5vw, 1rem)', padding: '1rem 0rem', textAlign: 'center' }}>
-          just ascii it. convert an image to ascii art.
+          just ascii it. convert a twitter or image to ascii art.
         </p>
         <ImageUploadEdit onImageUploaded={triggerRefresh} />
       </div>

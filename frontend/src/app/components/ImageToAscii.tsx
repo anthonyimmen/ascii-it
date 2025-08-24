@@ -86,7 +86,7 @@ export function imageToAscii(setType: string, color: boolean, brightness: boolea
       const htmlCtx = htmlCanvas.getContext('2d');
       
       // Set canvas size for the ASCII art
-      const fontSize = 38;
+      const fontSize = 12;
       const charWidth = fontSize * .5;
       const lineHeight = fontSize;
       const lines = asciiArt.split('\n').filter(line => line.trim().length > 0); // Remove empty lines
@@ -187,7 +187,7 @@ export function imageToAscii(setType: string, color: boolean, brightness: boolea
         } else {
           reject(new Error('Failed to create image file'));
         }
-      }, 'image/png');
+      }, 'image/jpeg', 0.8);
     };
     
     img.onerror = function() {
