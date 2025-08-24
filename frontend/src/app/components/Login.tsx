@@ -13,7 +13,8 @@ export default function Login() {
       display: 'flex',
       justifyContent: 'center',
       alignItems: 'center',
-      minHeight: '100vh',
+      minHeight: '100dvh',
+      width: '100dvw',
       background: 'transparent'
     }}>
       <div style={{
@@ -27,12 +28,12 @@ export default function Login() {
         padding: '40px'
       }}>
         <h2 style={{ marginBottom: '30px', color: 'white' }}>
-          {isSignUp ? 'Sign Up' : 'Sign In'}
+          {isSignUp ? 'sign up' : 'sign in'}
         </h2>
         
         <input
           type="email"
-          placeholder="Email"
+          placeholder="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           style={{
@@ -49,7 +50,7 @@ export default function Login() {
         
         <input
           type="password"
-          placeholder="Password"
+          placeholder="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           style={{
@@ -67,7 +68,7 @@ export default function Login() {
         {isSignUp && (
           <input
             type="password"
-            placeholder="Confirm Password"
+            placeholder="confirm password"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
             style={{
@@ -83,33 +84,32 @@ export default function Login() {
           />
         )}
         
-        <button
-          style={{
-            padding: '12px 24px',
-            border: '1px solid white',
-            borderRadius: '6px',
-            background: 'transparent',
-            color: 'white',
-            cursor: 'pointer',
-            marginBottom: '20px'
-          }}
-        >
-          {isSignUp ? 'Sign Up' : 'Sign In'}
-        </button>
-        
-        <button
-          onClick={() => setIsSignUp(!isSignUp)}
-          style={{
-            padding: '12px 24px',
-            border: '1px solid white',
-            borderRadius: '6px',
-            background: 'transparent',
-            color: 'white',
-            cursor: 'pointer'
-          }}
-        >
-          {isSignUp ? 'Switch to Sign In' : 'Switch to Sign Up'}
-        </button>
+        <div style={{display: 'flex', marginTop: '20px'}}>
+          <button
+            style={{
+              padding: '12px 24px',
+              border: '1px solid white',
+              borderRadius: '6px',
+              background: 'transparent',
+              color: 'white',
+              cursor: 'pointer',
+            }}
+          >
+            {isSignUp ? 'sign up' : 'sign in'}
+          </button>
+          
+          <button
+            onClick={() => setIsSignUp(!isSignUp)}
+            style={{
+              padding: '12px 24px',
+              background: 'transparent',
+              color: 'white',
+              cursor: 'pointer'
+            }}
+          >
+            {isSignUp ? 'sign in?' : 'sign up?'}
+          </button>
+        </div>
       </div>
     </div>
   );
