@@ -105,6 +105,15 @@ function ImageUploadEdit({ onImageUploaded }: ImageUploadEditProps) {
       // Clean up previous URLs
       cleanupObjectURL(previewUrl);
       cleanupObjectURL(asciiPreviewUrl);
+      // If previously viewing a Twitter profile, clear that state so the
+      // regular image upload flow renders correctly
+      setTwitterProfileInfo(null);
+      cleanupObjectURL(asciiProfilePreviewUrl);
+      cleanupObjectURL(asciiBannerPreviewUrl);
+      setAsciiProfileImage(null);
+      setAsciiBannerImage(null);
+      setAsciiProfilePreviewUrl(null);
+      setAsciiBannerPreviewUrl(null);
       
       setImage(file);
       setPreviewUrl(URL.createObjectURL(file));
@@ -119,6 +128,13 @@ function ImageUploadEdit({ onImageUploaded }: ImageUploadEditProps) {
       setPreviewUrl(null);
       setAsciiImage(null);
       setAsciiPreviewUrl(null);
+      setTwitterProfileInfo(null);
+      cleanupObjectURL(asciiProfilePreviewUrl);
+      cleanupObjectURL(asciiBannerPreviewUrl);
+      setAsciiProfileImage(null);
+      setAsciiBannerImage(null);
+      setAsciiProfilePreviewUrl(null);
+      setAsciiBannerPreviewUrl(null);
     }
   };
 
@@ -331,8 +347,7 @@ function ImageUploadEdit({ onImageUploaded }: ImageUploadEditProps) {
       
       {/* Custom Upload Button */}
       
-      {!displayImageUrl && 
-        <div className="flex flex-row items-center justify-center gap-4 mb-1">
+      <div className="flex flex-row items-center justify-center gap-4 mb-1">
           <div className="flex items-center">
             <span className="text-white mr-2 pb-1">@</span>
             <input
@@ -357,7 +372,7 @@ function ImageUploadEdit({ onImageUploaded }: ImageUploadEditProps) {
             />
           </label>
         </div>
-      }
+      
 
       {/* Hidden File Input */}
       <input
@@ -597,22 +612,11 @@ function ImageUploadEdit({ onImageUploaded }: ImageUploadEditProps) {
               </div>
             }
           </div>
-          <div className='flex flex-col justify-center items-center gap-4 mt-5 mb-6'>
-            <div className='flex flex-row justify-center items-center gap-4'>
-              <label
-                htmlFor="image-upload"
-                className="cursor-pointer px-2 pb-1 text-white transition flex flex-row items-center justify-center gap-2"
-              >
-                <span className="text-md">upload</span>
-                <img
-                  src="/upload.svg"
-                  alt="Upload icon"
-                  className="w-4 h-4"
-                />
-              </label>
+          <div className='flex flex-col justify-between items-between gap-4 mt-5 mb-6'>
+            <div className='flex flex-row justify-between gap-4'>
               <button
                 onClick={handleDownloadImage}
-                className="cursor-pointer px-2 pb-1 text-white transition flex flex-row items-center justify-center gap-2"
+                className="cursor-pointer pb-1 text-white transition flex flex-row items-center justify-center gap-2"
               >
                 <span className="text-md">download</span>
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -620,26 +624,8 @@ function ImageUploadEdit({ onImageUploaded }: ImageUploadEditProps) {
                 </svg>
               </button>
               <button
-                onClick={handleCopyAscii}
-                disabled={!asciiText}
-                className="cursor-pointer px-2 pb-1 text-white transition flex flex-row items-center justify-center gap-2 disabled:opacity-50"
-              >
-                <span className="text-md">{copyState}</span>
-                {copyState === 'copy' ? (
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                  </svg>
-                ) : (
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                )}
-              </button>
-            </div>
-            <div className='flex flex-row justify-center items-center gap-4'>
-              <button
                 onClick={handleGenerateAscii}
-                className="cursor-pointer px-2 pb-1 text-white transition flex flex-row items-center justify-center gap-2 disabled:opacity-50"
+                className="cursor-pointer pb-1 text-white transition flex flex-row items-center justify-center gap-2 disabled:opacity-50"
               >
                 <span className="text-md">generate</span>
                 <img
@@ -648,6 +634,35 @@ function ImageUploadEdit({ onImageUploaded }: ImageUploadEditProps) {
                   className="w-4 h-4"
                 />
               </button>
+              <button
+                onClick={handleCopyAscii}
+                disabled={!asciiText}
+                className="cursor-pointer pb-1 text-white transition flex flex-row items-center justify-center gap-2 disabled:opacity-50"
+              >
+                <span className="text-md">{copyState}</span>
+                {copyState === 'copy' ? (
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 28 28">
+                    <rect x="5" y="9" width="10" height="15" rx="2" ry="2" strokeWidth="2" />
+                    <rect x="9" y="5" width="10" height="15" rx="2" ry="2" strokeWidth="2" />
+                  </svg>
+                ) : (
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 28 28">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                )}
+              </button>
+              <button
+                onClick={handlePostImage}
+                disabled={!asciiImage}
+                className="cursor-pointer pb-1 text-white transition flex flex-row items-center justify-center gap-2 disabled:opacity-50"
+              >
+                <span className="text-md">post</span>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                </svg>
+              </button>
+            </div>
+            {/* <div className='flex flex-row justify-center items-center gap-4'>
               <button
                 onClick={handlePostImage}
                 disabled={!asciiImage}
@@ -658,7 +673,7 @@ function ImageUploadEdit({ onImageUploaded }: ImageUploadEditProps) {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
                 </svg>
               </button>
-            </div>
+            </div> */}
           </div>
         </div>
       )}
