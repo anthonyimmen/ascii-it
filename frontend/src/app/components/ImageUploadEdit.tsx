@@ -43,19 +43,43 @@ function ImageUploadEdit({ onImageUploaded }: ImageUploadEditProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
+  // ---------- Helpers ----------
+  const clearUploadState = useCallback(() => {
+    cleanupObjectURL(previewUrl);
+    cleanupObjectURL(asciiPreviewUrl);
+    setImage(null);
+    setPreviewUrl(null);
+    setAsciiImage(null);
+    setAsciiPreviewUrl(null);
+  }, [previewUrl, asciiPreviewUrl]);
+
+  const clearTwitterAsciiState = useCallback(() => {
+    cleanupObjectURL(asciiProfilePreviewUrl);
+    cleanupObjectURL(asciiBannerPreviewUrl);
+    setAsciiProfileImage(null);
+    setAsciiBannerImage(null);
+    setAsciiProfilePreviewUrl(null);
+    setAsciiBannerPreviewUrl(null);
+  }, [asciiProfilePreviewUrl, asciiBannerPreviewUrl]);
+
+  const resetCopy = useCallback(() => {
+    setAsciiText(null);
+    setCopyState('copy');
+  }, []);
+
   // Switch between original and ASCII image
   const displayImageUrl = viewOriginal ? previewUrl : (asciiPreviewUrl || previewUrl);
   const displayAsciiPreviewUrl = asciiPreviewUrl;
   const displayFile = viewOriginal ? image : asciiImage;
 
 
-  // Cleanup URLs on unmount to prevent memory leaks
+  // Cleanup object URLs when they change/unmount
   useEffect(() => {
-    return () => {
-      cleanupObjectURL(previewUrl);
-      cleanupObjectURL(asciiPreviewUrl);
-    };
-  }, []);
+    return () => cleanupObjectURL(previewUrl);
+  }, [previewUrl]);
+  useEffect(() => {
+    return () => cleanupObjectURL(asciiPreviewUrl);
+  }, [asciiPreviewUrl]);
 
   // Create preview URL when asciiImage changes
   useEffect(() => {
@@ -102,39 +126,24 @@ function ImageUploadEdit({ onImageUploaded }: ImageUploadEditProps) {
     const file = e.target.files?.[0];
 
     if (file && file.type.startsWith('image/')) {
-      // Clean up previous URLs
-      cleanupObjectURL(previewUrl);
-      cleanupObjectURL(asciiPreviewUrl);
-      // If previously viewing a Twitter profile, clear that state so the
-      // regular image upload flow renders correctly
+      // Clean up previous URLs and states
+      clearUploadState();
+      // If previously viewing a Twitter profile, clear that state so the regular image upload flow renders correctly
       setTwitterProfileInfo(null);
-      cleanupObjectURL(asciiProfilePreviewUrl);
-      cleanupObjectURL(asciiBannerPreviewUrl);
-      setAsciiProfileImage(null);
-      setAsciiBannerImage(null);
-      setAsciiProfilePreviewUrl(null);
-      setAsciiBannerPreviewUrl(null);
+      clearTwitterAsciiState();
+      resetCopy();
       
       setImage(file);
       setPreviewUrl(URL.createObjectURL(file));
-      setAsciiImage(null); // Clear ASCII image when new image is uploaded
-      setAsciiPreviewUrl(null);
       setViewOriginal(true);
       // Reset zoom and pan when new image is loaded
       setZoom(1);
       setPan({ x: 0, y: 0 });
     } else {
-      setImage(null);
-      setPreviewUrl(null);
-      setAsciiImage(null);
-      setAsciiPreviewUrl(null);
+      clearUploadState();
       setTwitterProfileInfo(null);
-      cleanupObjectURL(asciiProfilePreviewUrl);
-      cleanupObjectURL(asciiBannerPreviewUrl);
-      setAsciiProfileImage(null);
-      setAsciiBannerImage(null);
-      setAsciiProfilePreviewUrl(null);
-      setAsciiBannerPreviewUrl(null);
+      clearTwitterAsciiState();
+      resetCopy();
     }
   };
 
@@ -230,42 +239,19 @@ function ImageUploadEdit({ onImageUploaded }: ImageUploadEditProps) {
       setTwitterProfileInfo(profileInfo);
       // Show original Twitter images by default until ASCII is generated
       setViewOriginal(true);
-      // Clear any previously uploaded standalone image so generation targets Twitter
-      cleanupObjectURL(previewUrl);
-      cleanupObjectURL(asciiPreviewUrl);
-      setImage(null);
-      setPreviewUrl(null);
-      setAsciiImage(null);
-      setAsciiPreviewUrl(null);
-      // Clear any previous ASCII state for Twitter
-      cleanupObjectURL(asciiProfilePreviewUrl);
-      cleanupObjectURL(asciiBannerPreviewUrl);
-      setAsciiProfileImage(null);
-      setAsciiBannerImage(null);
-      setAsciiProfilePreviewUrl(null);
-      setAsciiBannerPreviewUrl(null);
-      setAsciiText(null);
-      setCopyState('copy');
+      // Clear any previous states so generation targets Twitter
+      clearUploadState();
+      clearTwitterAsciiState();
+      resetCopy();
       console.log('Twitter profile info:', profileInfo);
     } catch (error) {
       console.error('Error fetching Twitter profile:', error);
       setTwitterProfileInfo(null);
       // Ensure we default to original view and clear ASCII state on error as well
       setViewOriginal(true);
-      cleanupObjectURL(previewUrl);
-      cleanupObjectURL(asciiPreviewUrl);
-      setImage(null);
-      setPreviewUrl(null);
-      setAsciiImage(null);
-      setAsciiPreviewUrl(null);
-      cleanupObjectURL(asciiProfilePreviewUrl);
-      cleanupObjectURL(asciiBannerPreviewUrl);
-      setAsciiProfileImage(null);
-      setAsciiBannerImage(null);
-      setAsciiProfilePreviewUrl(null);
-      setAsciiBannerPreviewUrl(null);
-      setAsciiText(null);
-      setCopyState('copy');
+      clearUploadState();
+      clearTwitterAsciiState();
+      resetCopy();
     }
   };
 
@@ -333,7 +319,8 @@ function ImageUploadEdit({ onImageUploaded }: ImageUploadEditProps) {
         }
         
         await Promise.all(promises);
-        const parts = [profileAsciiText, bannerAsciiText].filter((p): p is string => !!p);
+        const maybeTexts: (string | null)[] = [profileAsciiText, bannerAsciiText];
+        const parts: string[] = maybeTexts.filter((p): p is string => p !== null);
         if (parts.length > 0) {
           // Join profile then banner ASCII texts with two newlines
           const combined = parts.join('\n\n');
