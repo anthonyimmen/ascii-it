@@ -6,7 +6,7 @@ import { Checkbox } from './Checkbox';
 import { imageToAscii } from './ImageToAscii';
 import Dropdown from './Dropdown';
 import { generateAsciiText, fillContainer, downloadImage } from '../utils/imageUtils';
-import { formatFileSize, cleanupObjectURL, fetchProfileInfo } from '../utils/fileUtils';
+import { formatFileSize, cleanupObjectURL, fetchProfileInfo, getHighResProfileImageUrl, getHighResBannerUrl } from '../utils/fileUtils';
 
 interface ImageUploadEditProps {
   onImageUploaded?: () => void;
@@ -228,10 +228,44 @@ function ImageUploadEdit({ onImageUploaded }: ImageUploadEditProps) {
     try {
       const profileInfo = await fetchProfileInfo(username.trim());
       setTwitterProfileInfo(profileInfo);
+      // Show original Twitter images by default until ASCII is generated
+      setViewOriginal(true);
+      // Clear any previously uploaded standalone image so generation targets Twitter
+      cleanupObjectURL(previewUrl);
+      cleanupObjectURL(asciiPreviewUrl);
+      setImage(null);
+      setPreviewUrl(null);
+      setAsciiImage(null);
+      setAsciiPreviewUrl(null);
+      // Clear any previous ASCII state for Twitter
+      cleanupObjectURL(asciiProfilePreviewUrl);
+      cleanupObjectURL(asciiBannerPreviewUrl);
+      setAsciiProfileImage(null);
+      setAsciiBannerImage(null);
+      setAsciiProfilePreviewUrl(null);
+      setAsciiBannerPreviewUrl(null);
+      setAsciiText(null);
+      setCopyState('copy');
       console.log('Twitter profile info:', profileInfo);
     } catch (error) {
       console.error('Error fetching Twitter profile:', error);
       setTwitterProfileInfo(null);
+      // Ensure we default to original view and clear ASCII state on error as well
+      setViewOriginal(true);
+      cleanupObjectURL(previewUrl);
+      cleanupObjectURL(asciiPreviewUrl);
+      setImage(null);
+      setPreviewUrl(null);
+      setAsciiImage(null);
+      setAsciiPreviewUrl(null);
+      cleanupObjectURL(asciiProfilePreviewUrl);
+      cleanupObjectURL(asciiBannerPreviewUrl);
+      setAsciiProfileImage(null);
+      setAsciiBannerImage(null);
+      setAsciiProfilePreviewUrl(null);
+      setAsciiBannerPreviewUrl(null);
+      setAsciiText(null);
+      setCopyState('copy');
     }
   };
 
@@ -253,7 +287,63 @@ function ImageUploadEdit({ onImageUploaded }: ImageUploadEditProps) {
     if (!image && !twitterProfileInfo) return;
     
     try {
-      if (image) {
+      // Prefer Twitter flow if a profile is loaded
+      if (twitterProfileInfo) {
+        // Handle Twitter profile images
+        const promises: Promise<void>[] = [];
+        let profileAsciiText: string | null = null;
+        let bannerAsciiText: string | null = null;
+        
+        // Generate ASCII for profile image
+        if (twitterProfileInfo.profile_image_url_https) {
+          const hiResProfileUrl = getHighResProfileImageUrl(twitterProfileInfo.profile_image_url_https);
+          const profileImageFile = await urlToFile(hiResProfileUrl, 'profile.jpg');
+          promises.push(
+            imageToAscii(characterSet, isCheckedColor, true, profileImageFile, backgroundColor, density, contrast)
+              .then(asciiFile => setAsciiProfileImage(asciiFile))
+          );
+          // Also generate ASCII text for copy
+          promises.push(
+            generateAsciiText(
+              profileImageFile,
+              characterSet,
+              density,
+              contrast,
+              containerRef,
+              1,
+              { x: 0, y: 0 },
+              { targetCharWidth: 160, targetCharHeight: 160 }
+            ).then(text => { profileAsciiText = text; })
+          );
+        }
+        
+        // Generate ASCII for banner image
+        if (twitterProfileInfo.profile_banner_url) {
+          const hiResBannerUrl = getHighResBannerUrl(twitterProfileInfo.profile_banner_url);
+          const bannerImageFile = await urlToFile(hiResBannerUrl, 'banner.jpg');
+          promises.push(
+            imageToAscii(characterSet, isCheckedColor, true, bannerImageFile, backgroundColor, density, contrast)
+              .then(asciiFile => setAsciiBannerImage(asciiFile))
+          );
+          // Also generate ASCII text for copy
+          promises.push(
+            generateAsciiText(bannerImageFile, characterSet, density, contrast, containerRef, 1, { x: 0, y: 0 }, { targetCharWidth: 200 })
+              .then(text => { bannerAsciiText = text; })
+          );
+        }
+        
+        await Promise.all(promises);
+        const parts = [profileAsciiText, bannerAsciiText].filter((p): p is string => !!p);
+        if (parts.length > 0) {
+          // Join profile then banner ASCII texts with two newlines
+          const combined = parts.join('\n\n');
+          setAsciiText(combined);
+          setCopyState('copy');
+        } else {
+          setAsciiText(null);
+        }
+        setViewOriginal(false); // Switch to ASCII view after generation
+      } else if (image) {
         // Handle regular image upload
         const asciiImageFile = await imageToAscii(characterSet, isCheckedColor, true, image, backgroundColor, density, contrast);
         setAsciiImage(asciiImageFile);
@@ -263,30 +353,6 @@ function ImageUploadEdit({ onImageUploaded }: ImageUploadEditProps) {
         setAsciiText(asciiText);
         setCopyState('copy'); // Reset copy state when new image is generated
         
-        setViewOriginal(false); // Switch to ASCII view after generation
-      } else if (twitterProfileInfo) {
-        // Handle Twitter profile images
-        const promises = [];
-        
-        // Generate ASCII for profile image
-        if (twitterProfileInfo.profile_image_url_https) {
-          const profileImageFile = await urlToFile(twitterProfileInfo.profile_image_url_https, 'profile.jpg');
-          promises.push(
-            imageToAscii(characterSet, isCheckedColor, true, profileImageFile, backgroundColor, density, contrast)
-              .then(asciiFile => setAsciiProfileImage(asciiFile))
-          );
-        }
-        
-        // Generate ASCII for banner image
-        if (twitterProfileInfo.profile_banner_url) {
-          const bannerImageFile = await urlToFile(twitterProfileInfo.profile_banner_url, 'banner.jpg');
-          promises.push(
-            imageToAscii(characterSet, isCheckedColor, true, bannerImageFile, backgroundColor, density, contrast)
-              .then(asciiFile => setAsciiBannerImage(asciiFile))
-          );
-        }
-        
-        await Promise.all(promises);
         setViewOriginal(false); // Switch to ASCII view after generation
       }
     } catch (error) {
@@ -561,7 +627,7 @@ function ImageUploadEdit({ onImageUploaded }: ImageUploadEditProps) {
             </div>
           }
           <div className="flex items-center gap-2 mt-2 px-1">
-            <span>density: </span>
+            <span>resolution: </span>
             <Slider
               value={[density]} // <-- Controlled value
               onValueChange={(value) => setDensity(value[0])} // <-- Update state
