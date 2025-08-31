@@ -32,6 +32,7 @@ function ImageUploadEdit({ onImageUploaded }: ImageUploadEditProps) {
   const [contrast, setContrast] = useState(5)
   const [asciiText, setAsciiText] = useState<string | null>(null);
   const [copyState, setCopyState] = useState<'copy' | 'copied'>('copy');
+  const [isFetchingTwitter, setIsFetchingTwitter] = useState(false);
 
   // Zoom and pan state
   const [zoom, setZoom] = useState(1);
@@ -206,12 +207,16 @@ function ImageUploadEdit({ onImageUploaded }: ImageUploadEditProps) {
     if (twitterProfileInfo) {
       // Download both profile and banner images
       if (asciiProfileImage || twitterProfileInfo.profile_image_url_https) {
-        const profileUrl = !viewOriginal && asciiProfilePreviewUrl ? asciiProfilePreviewUrl : twitterProfileInfo.profile_image_url_https;
+        const profileUrl = !viewOriginal && asciiProfilePreviewUrl
+          ? asciiProfilePreviewUrl
+          : getHighResProfileImageUrl(twitterProfileInfo.profile_image_url_https);
         downloadImageFromUrl(profileUrl, `${twitterProfileInfo.screen_name}-profile${!viewOriginal ? '-ascii' : ''}.jpg`);
       }
       
       if (asciiBannerImage || twitterProfileInfo.profile_banner_url) {
-        const bannerUrl = !viewOriginal && asciiBannerPreviewUrl ? asciiBannerPreviewUrl : twitterProfileInfo.profile_banner_url;
+        const bannerUrl = !viewOriginal && asciiBannerPreviewUrl
+          ? asciiBannerPreviewUrl
+          : getHighResBannerUrl(twitterProfileInfo.profile_banner_url);
         downloadImageFromUrl(bannerUrl, `${twitterProfileInfo.screen_name}-banner${!viewOriginal ? '-ascii' : ''}.jpg`);
       }
     } else if (image) {
@@ -235,6 +240,7 @@ function ImageUploadEdit({ onImageUploaded }: ImageUploadEditProps) {
     if (!username.trim()) return;
     
     try {
+      setIsFetchingTwitter(true);
       const profileInfo = await fetchProfileInfo(username.trim());
       setTwitterProfileInfo(profileInfo);
       // Show original Twitter images by default until ASCII is generated
@@ -252,6 +258,8 @@ function ImageUploadEdit({ onImageUploaded }: ImageUploadEditProps) {
       clearUploadState();
       clearTwitterAsciiState();
       resetCopy();
+    } finally {
+      setIsFetchingTwitter(false);
     }
   };
 
@@ -385,6 +393,11 @@ function ImageUploadEdit({ onImageUploaded }: ImageUploadEditProps) {
     }
   };
 
+  // Disable download until ASCII is generated (for both flows)
+  const isDownloadDisabled = viewOriginal || (twitterProfileInfo
+    ? !(asciiProfileImage || asciiBannerImage)
+    : !asciiImage);
+
   return (
     <div 
       style={{
@@ -406,7 +419,8 @@ function ImageUploadEdit({ onImageUploaded }: ImageUploadEditProps) {
             <input
               type="text"
               className="bg-transparent text-white outline-none border-0 border-b border-white pb-1 w-38"
-              placeholder="twitter profile"
+              placeholder={isFetchingTwitter ? "loading..." : "twitter profile"}
+              aria-busy={isFetchingTwitter}
               value={twitterUsername}
               onChange={(e) => setTwitterUsername(e.target.value)}
               onKeyDown={handleTwitterInputKeyDown}
@@ -515,7 +529,7 @@ function ImageUploadEdit({ onImageUploaded }: ImageUploadEditProps) {
                   {/* Banner Image */}
                   {twitterProfileInfo.profile_banner_url && (
                     <img
-                      src={!viewOriginal && asciiBannerPreviewUrl ? asciiBannerPreviewUrl : twitterProfileInfo.profile_banner_url}
+                      src={!viewOriginal && asciiBannerPreviewUrl ? asciiBannerPreviewUrl : getHighResBannerUrl(twitterProfileInfo.profile_banner_url)}
                       alt="Twitter banner"
                       className="absolute top-0 left-0 w-full h-full object-cover"
                     />
@@ -534,7 +548,7 @@ function ImageUploadEdit({ onImageUploaded }: ImageUploadEditProps) {
                       }}
                     >
                       <img
-                        src={!viewOriginal && asciiProfilePreviewUrl ? asciiProfilePreviewUrl : twitterProfileInfo.profile_image_url_https}
+                        src={!viewOriginal && asciiProfilePreviewUrl ? asciiProfilePreviewUrl : getHighResProfileImageUrl(twitterProfileInfo.profile_image_url_https)}
                         alt="Profile"
                         className="w-full h-full object-cover"
                       />
@@ -665,17 +679,18 @@ function ImageUploadEdit({ onImageUploaded }: ImageUploadEditProps) {
               </div>
             }
           </div>
-          <div className='flex flex-col justify-between items-between gap-4 mt-5 mb-6'>
-            <div className='flex flex-row justify-between gap-4'>
-              <button
-                onClick={handleDownloadImage}
-                className="cursor-pointer pb-1 text-white transition flex flex-row items-center justify-center gap-2"
-              >
-                <span className="text-md">download</span>
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-              </button>
+            <div className='flex flex-col justify-between items-between gap-4 mt-5 mb-6'>
+              <div className='flex flex-row justify-between gap-4'>
+                <button
+                  onClick={handleDownloadImage}
+                  disabled={isDownloadDisabled}
+                  className="cursor-pointer pb-1 text-white transition flex flex-row items-center justify-center gap-2 disabled:opacity-50"
+                >
+                  <span className="text-md">download</span>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                </button>
               <button
                 onClick={handleGenerateAscii}
                 className="cursor-pointer pb-1 text-white transition flex flex-row items-center justify-center gap-2 disabled:opacity-50"
