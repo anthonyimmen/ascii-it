@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
+import TwitterCard from './TwitterCard';
 
 interface ImageData {
   id: number;
@@ -28,31 +29,31 @@ export default function ImageGallery({ refreshTrigger }: ImageGalleryProps) {
   };
 
   useEffect(() => {
-    const fetchImages = async () => {
-      try {
-        const response = await fetch('http://localhost:3000/api/images');
-        if (!response.ok) {
-          throw new Error('failed to fetch generated ascii images');
-        }
-        const data = await response.json();
-        const newImages = data.images || [];
-        setImages(newImages);
-        
-        // Only reset loaded images if we have a different set of images
-        setLoadedImages(prev => {
-          const currentImageIds = new Set(newImages.map((img: ImageData) => img.id));
-          const filteredLoaded = new Set(Array.from(prev).filter(id => currentImageIds.has(id)));
-          return filteredLoaded;
-        });
-        
-        setLoading(false);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'failed to load generated ascii images');
-        setLoading(false);
-      }
-    };
+    // Test mode: pull images from public/test-images/standard
+    const testFilenames = [
+      'IMG_7028.JPG',
+      'IMG_7029.JPG',
+      'IMG_7030.JPG',
+      'aot.jpeg',
+      'naruto-pain.avif',
+      'test.jpeg',
+      'vagabond.webp',
+    ];
 
-    fetchImages();
+    const newImages: ImageData[] = testFilenames.map((name, idx) => ({
+      id: idx + 1,
+      filename: name,
+      original_name: name,
+      file_path: `/test-images/standard/${name}`,
+      file_size: 0,
+      mime_type: '',
+      created_at: new Date().toISOString(),
+    }));
+
+    setImages(newImages);
+    setLoadedImages(new Set());
+    setError(null);
+    setLoading(false);
   }, [refreshTrigger]);
 
 
@@ -140,6 +141,22 @@ export default function ImageGallery({ refreshTrigger }: ImageGalleryProps) {
           scrollbarWidth: 'none'
         }}
       >
+        {/* Twitter composite card */}
+        <div
+          className="gallery-image"
+          style={{
+            flexShrink: 0,
+            width: '120px',
+            height: '120px',
+            borderRadius: '6px',
+            overflow: 'hidden',
+            backgroundColor: 'rgba(255, 255, 255, 0.05)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            position: 'relative'
+          }}
+        >
+          <TwitterCard />
+        </div>
 {images.map((image) => {
           const isLoaded = loadedImages.has(image.id);
           return (
@@ -160,7 +177,7 @@ export default function ImageGallery({ refreshTrigger }: ImageGalleryProps) {
               }}
             >
               <Image
-                src={`http://localhost:3000/images/${image.filename}`}
+                src={image.file_path || `http://localhost:3000/images/${image.filename}`}
                 alt={image.original_name}
                 width={120}
                 height={120}
