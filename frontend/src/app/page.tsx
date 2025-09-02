@@ -1,15 +1,23 @@
 'use client';
 
 import Image from 'next/image';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import ImageUploadEdit from './components/ImageUploadEdit';
 import ImageGallery from './components/ImageGallery';
 import Login from './components/Login';
 import { useImageRefresh } from './hooks/useImageRefresh';
+import { auth } from './firebase/firebase';
+import { onAuthStateChanged, type User } from 'firebase/auth';
 
 export default function Home() {
   const { refreshTrigger, triggerRefresh } = useImageRefresh();
   const [showLogin, setShowLogin] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, setUser);
+    return () => unsub();
+  }, []);
   
   return (
     <div
@@ -30,17 +38,31 @@ export default function Home() {
           position: 'absolute',
           top: '1rem',
           right: '1rem',
-          padding: '8px 16px',
+          padding: user ? '0' : '8px 16px',
           border: '1px solid white',
-          borderRadius: '6px',
+          borderRadius: user ? '9999px' : '6px',
           background: 'transparent',
           color: 'white',
           cursor: 'pointer',
           fontSize: '14px',
           zIndex: 10,
+          width: user ? 40 : undefined,
+          height: user ? 40 : undefined,
+          overflow: 'hidden',
         }}
+        aria-label={user ? 'Account' : 'Log in'}
       >
-        Log In
+        {user ? (
+          <img
+            src={user.photoURL || '/logo.jpeg'}
+            alt={user.displayName || 'User avatar'}
+            width={40}
+            height={40}
+            style={{ borderRadius: '50%', display: 'block', objectFit: 'cover' }}
+          />
+        ) : (
+          'Log In'
+        )}
       </button>
       <div
         className="content-container"
@@ -107,7 +129,7 @@ export default function Home() {
               >
                 ×
               </button>
-              <Login />
+              <Login onSuccess={() => setShowLogin(false)} onClose={() => setShowLogin(false)} />
             </div>
           </div>
         </div>

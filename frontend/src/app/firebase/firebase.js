@@ -1,16 +1,21 @@
-// firebase.js
-import { initializeApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
+// lib/firebase.js
+import { initializeApp, getApps, getApp } from "firebase/app";
+import { getAuth } from "firebase/auth";
 
+// Config from env - works for local and prod
 const firebaseConfig = {
-  apiKey: "AIzaSyD9e1vU6AAbkOjmCWY-_E0FUNiw6uqtl1k",
-  authDomain: "ascii-it-54ba2.firebaseapp.com",
-  projectId: "ascii-it-54ba2",
-  storageBucket: "ascii-it-54ba2.firebasestorage.app",
-  messagingSenderId: "3059258006",
-  appId: "1:3059258006:web:977791581b1e045082a8b7",
-  measurementId: "G-85DNLSTWR2"
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN, // need to make prod domain www.ascii-it.com to get the domain correct on google signin
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+  measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
 };
 
-const app = initializeApp(firebaseConfig);
+// Initialize once
+const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+
+// Export auth instance
 export const auth = getAuth(app);
+export default app;
