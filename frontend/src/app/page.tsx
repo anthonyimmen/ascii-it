@@ -58,6 +58,7 @@ export default function Home() {
             alt={user.displayName || 'User avatar'}
             width={40}
             height={40}
+            referrerPolicy="no-referrer"
             style={{ borderRadius: '50%', display: 'block', objectFit: 'cover' }}
           />
         ) : (

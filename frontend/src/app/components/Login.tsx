@@ -83,8 +83,8 @@ export default function Login({ onSuccess, onClose }: LoginProps) {
         justifyContent: 'center',
         padding: '40px'
       }}>
-        <h2 style={{ marginBottom: '30px', color: 'white' }}>
-          {user ? 'account' : 'sign in / sign up'}
+        <h2 style={{ marginBottom: '20px', color: 'white' }}>
+          {user ? 'account info' : 'sign in / sign up'}
         </h2>
 
         {!user ? (
@@ -116,48 +116,51 @@ export default function Login({ onSuccess, onClose }: LoginProps) {
           </button>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
               <img
                 src={user.photoURL || '/logo.jpeg'}
                 alt={user.displayName || 'User avatar'}
                 width={40}
                 height={40}
+                referrerPolicy="no-referrer"
                 style={{ borderRadius: '50%', objectFit: 'cover' }}
               />
               <div style={{ color: 'white', fontSize: 16, fontWeight: 500 }}>
                 {user.displayName || user.email}
               </div>
             </div>
-            <button
-              onClick={handleSignOut}
-              disabled={loading}
-              style={{
-                padding: '10px 16px',
-                borderRadius: '6px',
-                border: '1px solid #e5e5e5',
-                background: 'transparent',
-                color: '#e5e5e5',
-                cursor: loading ? 'not-allowed' : 'pointer',
-                fontWeight: 500,
-              }}
-            >
-              log out
-            </button>
-            <button
-              onClick={handleDeleteAccount}
-              disabled={loading}
-              style={{
-                padding: '10px 16px',
-                borderRadius: '6px',
-                border: '1px solid #ff6b6b',
-                background: 'transparent',
-                color: '#ff6b6b',
-                cursor: loading ? 'not-allowed' : 'pointer',
-                fontWeight: 500,
-              }}
-            >
-              delete account
-            </button>
+            <div style={{ display: 'flex', gap: 12 }}>
+              <button
+                onClick={handleSignOut}
+                disabled={loading}
+                style={{
+                  padding: '10px 16px',
+                  borderRadius: '6px',
+                  border: '1px solid #e5e5e5',
+                  background: 'transparent',
+                  color: '#e5e5e5',
+                  cursor: loading ? 'not-allowed' : 'pointer',
+                  fontWeight: 500,
+                }}
+              >
+                log out
+              </button>
+              <button
+                onClick={handleDeleteAccount}
+                disabled={loading}
+                style={{
+                  padding: '10px 16px',
+                  borderRadius: '6px',
+                  //border: '1px solid #ff6b6b',
+                  background: 'transparent',
+                  color: '#ff6b6b',
+                  cursor: loading ? 'not-allowed' : 'pointer',
+                  fontWeight: 500,
+                }}
+              >
+                delete account
+              </button>
+            </div>
           </div>
         )}
 

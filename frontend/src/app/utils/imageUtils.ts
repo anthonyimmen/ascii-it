@@ -115,7 +115,7 @@ export const generateAsciiText = (
         // ASCII dimensions should match the container viewport scaled by density
         // Adjust for ASCII character aspect ratio (characters are typically taller than wide)
         asciiWidth = Math.floor(containerWidth * densityFactor / 10);
-        asciiHeight = Math.floor(containerHeight * densityFactor / 30); // reduce vertical stretch
+        asciiHeight = Math.floor(containerHeight * densityFactor / 50); // reduce vertical stretch
       }
       
       canvas.width = asciiWidth;

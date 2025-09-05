@@ -306,7 +306,7 @@ function ImageUploadEdit({ onImageUploaded }: ImageUploadEditProps) {
               containerRef,
               1,
               { x: 0, y: 0 },
-              { targetCharWidth: 160, targetCharHeight: 160 }
+              { targetCharWidth: 160, targetCharHeight: 60 }
             ).then(text => { profileAsciiText = text; })
           );
         }
@@ -321,7 +321,7 @@ function ImageUploadEdit({ onImageUploaded }: ImageUploadEditProps) {
           );
           // Also generate ASCII text for copy
           promises.push(
-            generateAsciiText(bannerImageFile, characterSet, density, contrast, containerRef, 1, { x: 0, y: 0 }, { targetCharWidth: 200 })
+            generateAsciiText(bannerImageFile, characterSet, density, contrast, containerRef, 1, { x: 0, y: 0 }, { targetCharWidth: 200, targetCharHeight: 25 })
               .then(text => { bannerAsciiText = text; })
           );
         }
