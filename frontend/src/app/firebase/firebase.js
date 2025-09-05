@@ -1,6 +1,7 @@
 // lib/firebase.js
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
+import { getStorage } from "firebase/storage";
 
 // Config from env - works for local and prod
 const firebaseConfig = {
@@ -16,6 +17,7 @@ const firebaseConfig = {
 // Initialize once
 const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 
-// Export auth instance
+// Export auth and storage instances
 export const auth = getAuth(app);
+export const storage = getStorage(app);
 export default app;

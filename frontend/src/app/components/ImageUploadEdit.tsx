@@ -7,6 +7,9 @@ import { generateAsciiFromImage, asciiToImage } from './ImageToAscii';
 import Dropdown from './Dropdown';
 import { fillContainer, downloadImage } from '../utils/imageUtils';
 import { formatFileSize, cleanupObjectURL, fetchProfileInfo, getHighResProfileImageUrl, getHighResBannerUrl } from '../utils/fileUtils';
+import { auth, storage } from '../firebase/firebase';
+import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { onAuthStateChanged, type User } from 'firebase/auth';
 
 interface ImageUploadEditProps {
   onImageUploaded?: () => void;
@@ -25,7 +28,7 @@ function ImageUploadEdit({ onImageUploaded }: ImageUploadEditProps) {
   const [asciiBannerPreviewUrl, setAsciiBannerPreviewUrl] = useState<string | null>(null);
   const [isCheckedColor, setIsCheckedColor] = useState(true);
   const [isCheckedTwitterBanner, setIsCheckedTwitterBanner] = useState(false);
-  const [backgroundColor, setBackgroundColor] = useState("#222222");
+  const [backgroundColor, setBackgroundColor] = useState("#000");
   const [viewOriginal, setViewOriginal] = useState(true); 
   const [characterSet, setCharacterSet] = useState(".:*-=+%#@");
   const [density, setDensity] = useState(50);
@@ -45,6 +48,12 @@ function ImageUploadEdit({ onImageUploaded }: ImageUploadEditProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   // Track latest Twitter fetch to ignore stale responses
   const twitterRequestIdRef = useRef(0);
+  const [currentUser, setCurrentUser] = useState<User | null>(auth.currentUser);
+
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, setCurrentUser);
+    return () => unsub();
+  }, []);
 
   // ---------- Helpers ----------
   const clearUploadState = useCallback(() => {
@@ -391,25 +400,25 @@ function ImageUploadEdit({ onImageUploaded }: ImageUploadEditProps) {
 
   const handlePostImage = async () => {
     if (!asciiImage) return;
+    if (!auth.currentUser) {
+      console.warn('user must be logged in to post');
+      return;
+    }
     
     try {
-      // Upload the generated ASCII image to backend
-      const formData = new FormData();
-      formData.append('image', asciiImage);
-      
-      const response = await fetch('http://localhost:3000/api/images', {
-        method: 'PUT',
-        body: formData,
-      });
-      
-      if (response.ok) {
-        const result = await response.json();
-        console.log('ASCII image uploaded successfully:', result);
-        // Trigger refresh of image gallery
-        onImageUploaded?.();
-      } else {
-        console.error('Failed to upload ASCII image:', response.statusText);
-      }
+      const user = auth.currentUser;
+      const uid = user!.uid;
+      const baseName = (asciiImage.name || 'ascii-image.png').replace(/\s+/g, '-');
+      const ts = new Date().toISOString().replace(/[:.]/g, '-');
+      const objectPath = `users/${uid}/ascii/${ts}-${baseName}`;
+
+      // Use the default bucket configured in Firebase (from .env)
+      const ref = storageRef(storage, objectPath);
+      const metadata = { contentType: asciiImage.type || 'image/png', customMetadata: { uid, source: 'ascii-it' } };
+      await uploadBytes(ref, asciiImage, metadata);
+      const url = await getDownloadURL(ref);
+      console.log('ASCII image uploaded to Firebase Storage:', { path: objectPath, url });
+      onImageUploaded?.();
     } catch (error) {
       console.error('Error uploading image:', error);
     }
@@ -419,6 +428,8 @@ function ImageUploadEdit({ onImageUploaded }: ImageUploadEditProps) {
   const isDownloadDisabled = viewOriginal || (twitterProfileInfo
     ? !(asciiProfileImage || asciiBannerImage)
     : !asciiImage);
+
+  const postDisabled = !asciiImage || !currentUser;
 
   return (
     <div 
@@ -683,7 +694,7 @@ function ImageUploadEdit({ onImageUploaded }: ImageUploadEditProps) {
               style={{
                 outline: 'none'
               }}
-              placeholder="#292929"
+              placeholder="#000"
               pattern="^#[0-9A-Fa-f]{6}$"
             />
           </div>
@@ -743,29 +754,29 @@ function ImageUploadEdit({ onImageUploaded }: ImageUploadEditProps) {
                   </svg>
                 )}
               </button>
-              <button
-                onClick={handlePostImage}
-                disabled={!asciiImage}
-                className="cursor-pointer pb-1 text-white transition flex flex-row items-center justify-center gap-2 disabled:opacity-50"
-              >
-                <span className="text-md">post</span>
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                </svg>
-              </button>
+              <div className="relative group">
+                <button
+                  onClick={handlePostImage}
+                  disabled={postDisabled}
+                  aria-describedby={postDisabled ? 'post-tooltip' : undefined}
+                  className="pb-1 text-white transition flex flex-row items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                >
+                  <span className="text-md">post</span>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                  </svg>
+                </button>
+                {postDisabled && (
+                  <div
+                    id="post-tooltip"
+                    role="tooltip"
+                    className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-black text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10"
+                  >
+                    logged in users can post
+                  </div>
+                )}
+              </div>
             </div>
-            {/* <div className='flex flex-row justify-center items-center gap-4'>
-              <button
-                onClick={handlePostImage}
-                disabled={!asciiImage}
-                className="cursor-pointer px-3 py-2 text-white transition flex flex-row items-center justify-center gap-2 disabled:opacity-50 border border-white rounded-lg"
-              >
-                <span className="text-md">post</span>
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                </svg>
-              </button>
-            </div> */}
           </div>
         </div>
       )}
