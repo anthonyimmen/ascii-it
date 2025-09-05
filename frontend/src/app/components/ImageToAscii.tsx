@@ -4,11 +4,12 @@ export function generateAsciiFromImage(
   brightness: boolean,
   image: File | null,
   density: number,
-  contrast: number
+  contrast: number,
+  options?: { targetCharWidth?: number }
 ): Promise<{ plain: string; rich: string }> {
   const characterSets = [
-    ".:*-=+%#@",
-    "⠁⠂⠃⠄⠅⠆⠇⠈⠉⠊⠋⠌⠍⠎⠏⠐⠑⠒⠓⠔⠕⠖⠗⠘⠙⠚⠛⠜⠝⠞⠟",
+    " .:*-=+%#@",
+    " ⠁⠂⠃⠄⠅⠆⠇⠈⠉⠊⠋⠌⠍⠎⠏⠐⠑⠒⠓⠔⠕⠖⠗⠘⠙⠚⠛⠜⠝⠞⠟",
     " ░▒▓█"
   ];
 
@@ -37,7 +38,10 @@ export function generateAsciiFromImage(
       const maxDensity = 10; // You can set this to whatever you want
       const densityFactor = Math.max(minDensity, Math.min(density, maxDensity));
 
-      const baseMaxWidth = Math.floor(200 * densityFactor / 10); // Base width scaled by density factor
+      // Base width scaled by density factor unless overridden
+      const baseMaxWidth = options?.targetCharWidth
+        ? Math.max(1, Math.floor(options.targetCharWidth))
+        : Math.floor(200 * densityFactor / 10);
       const aspectRatio = (img.height / img.width) * 0.5;
       canvas.width = baseMaxWidth;
       canvas.height = Math.floor(baseMaxWidth * aspectRatio);
@@ -117,7 +121,8 @@ export function asciiToImage(
   asciiArt: string,
   backgroundColor: string = "#222222",
   color: boolean = false,
-  originalFileName?: string
+  originalFileName?: string,
+  pixelScale?: number
 ): Promise<File> {
   return new Promise((resolve, reject) => {
     const htmlCanvas = document.createElement('canvas');
@@ -136,12 +141,22 @@ export function asciiToImage(
         ...lines.map((line) => line.replace(/<[^>]*>/g, '').length)
       );
 
-      htmlCanvas.width = Math.max(1, Math.floor(maxLineLength * charWidth));
-      htmlCanvas.height = Math.max(1, Math.floor(lines.length * lineHeight));
+      // Logical layout size in CSS pixels
+      const layoutWidth = Math.max(1, Math.floor(maxLineLength * charWidth));
+      const layoutHeight = Math.max(1, Math.floor(lines.length * lineHeight));
+
+      // Render at higher pixel density for sharper output
+      const scale = 4;
+      const effectiveScale = Math.max(1, Math.floor(pixelScale ?? scale));
+
+      htmlCanvas.width = layoutWidth * effectiveScale;
+      htmlCanvas.height = layoutHeight * effectiveScale;
+      htmlCtx!.scale(effectiveScale, effectiveScale);
 
       // Fill background
       htmlCtx!.fillStyle = backgroundColor;
-      htmlCtx!.fillRect(0, 0, htmlCanvas.width, htmlCanvas.height);
+      // Use logical layout size for fill after scaling
+      htmlCtx!.fillRect(0, 0, layoutWidth, layoutHeight);
 
       // Set text properties
       htmlCtx!.font = `${fontSize}px 'Courier New', monospace`;
@@ -222,20 +237,17 @@ export function asciiToImage(
         }
       });
 
-      // Convert canvas to blob and then to File
-      htmlCanvas.toBlob(
-        (blob) => {
-          if (blob) {
-            const fileName = `ascii-${originalFileName || 'image.png'}`;
-            const file = new File([blob], fileName, { type: 'image/png' });
-            resolve(file);
-          } else {
-            reject(new Error('Failed to create image file'));
-          }
-        },
-        'image/jpeg',
-        0.8
-      );
+      // Convert canvas to blob (PNG for crisp text) and then to File
+      htmlCanvas.toBlob((blob) => {
+        if (blob) {
+          const base = originalFileName ? originalFileName.replace(/\.[^/.]+$/, '') : 'image';
+          const fileName = `ascii-${base}.png`;
+          const file = new File([blob], fileName, { type: 'image/png' });
+          resolve(file);
+        } else {
+          reject(new Error('Failed to create image file'));
+        }
+      }, 'image/png');
     } catch (e) {
       reject(e);
     }

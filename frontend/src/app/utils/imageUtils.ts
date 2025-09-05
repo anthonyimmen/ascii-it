@@ -45,6 +45,11 @@ export const downloadImage = (
   const ctx = canvas.getContext('2d');
   if (!ctx) return;
 
+  // Prefer device pixel ratio for sharper output
+  const dpr = 4;
+  // Improve crispness when scaling text-like images
+  ctx.imageSmoothingEnabled = false;
+
   const img = imageRef.current;
   const container = containerRef.current;
   if (!container) return;
@@ -54,10 +59,10 @@ export const downloadImage = (
   const displayContainerWidth = containerRect.width;
   const displayContainerHeight = containerRect.height;
   
-  // Set canvas size to match the actual displayed container dimensions
-  const scaleFactor = 2; // Reasonable resolution multiplier
-  canvas.width = displayContainerWidth * scaleFactor;
-  canvas.height = displayContainerHeight * scaleFactor;
+  // Set canvas size to match the actual displayed container dimensions (scaled by DPR)
+  const scaleFactor = Math.max(1, Math.floor(dpr));
+  canvas.width = Math.floor(displayContainerWidth * scaleFactor);
+  canvas.height = Math.floor(displayContainerHeight * scaleFactor);
 
   // Clear canvas with same background as container
   ctx.fillStyle = backgroundColor;
@@ -103,17 +108,18 @@ export const downloadImage = (
   // Draw the image exactly as it appears in the container
   ctx.drawImage(img, x, y, canvasZoomedWidth, canvasZoomedHeight);
 
-  // Download the canvas as an image
+  // Download the canvas as an image (PNG for crisp text)
   canvas.toBlob((blob) => {
     if (blob) {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `ascii-${image?.name || 'image.png'}`;
+      const base = image?.name ? image.name.replace(/\.[^/.]+$/, '') : 'image';
+      a.download = `ascii-${base}.png`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
     }
-  }, 'image/jpeg', 0.9);
+  }, 'image/png');
 };

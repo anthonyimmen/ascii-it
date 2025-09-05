@@ -165,8 +165,8 @@ export default function ImageGallery({ refreshTrigger }: ImageGalleryProps) {
               className="gallery-image"
               style={{
                 flexShrink: 0,
-                width: '120px',
-                height: '120px',
+                width: '100px',
+                height: '100px',
                 borderRadius: '6px',
                 overflow: 'hidden',
                 backgroundColor: 'rgba(255, 255, 255, 0.05)',

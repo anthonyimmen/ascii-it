@@ -43,6 +43,8 @@ function ImageUploadEdit({ onImageUploaded }: ImageUploadEditProps) {
   const imageRef = useRef<HTMLImageElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  // Track latest Twitter fetch to ignore stale responses
+  const twitterRequestIdRef = useRef(0);
 
   // ---------- Helpers ----------
   const clearUploadState = useCallback(() => {
@@ -130,6 +132,8 @@ function ImageUploadEdit({ onImageUploaded }: ImageUploadEditProps) {
       // Clean up previous URLs and states
       clearUploadState();
       // If previously viewing a Twitter profile, clear that state so the regular image upload flow renders correctly
+      // Invalidate any in-flight Twitter fetch so late responses are ignored
+      twitterRequestIdRef.current += 1;
       setTwitterProfileInfo(null);
       clearTwitterAsciiState();
       resetCopy();
@@ -145,6 +149,10 @@ function ImageUploadEdit({ onImageUploaded }: ImageUploadEditProps) {
       setTwitterProfileInfo(null);
       clearTwitterAsciiState();
       resetCopy();
+    }
+    // Ensure choosing the same file triggers onChange next time
+    if (e.currentTarget) {
+      try { e.currentTarget.value = ''; } catch {}
     }
   };
 
@@ -238,10 +246,13 @@ function ImageUploadEdit({ onImageUploaded }: ImageUploadEditProps) {
 
   const handleTwitterProfileFetch = async (username: string) => {
     if (!username.trim()) return;
-    
+    setIsFetchingTwitter(true);
+    const reqId = ++twitterRequestIdRef.current;
+
     try {
-      setIsFetchingTwitter(true);
       const profileInfo = await fetchProfileInfo(username.trim());
+      // Ignore if a newer request started (e.g., user started uploading an image)
+      if (reqId !== twitterRequestIdRef.current) return;
       setTwitterProfileInfo(profileInfo);
       // Show original Twitter images by default until ASCII is generated
       setViewOriginal(true);
@@ -252,6 +263,7 @@ function ImageUploadEdit({ onImageUploaded }: ImageUploadEditProps) {
       console.log('Twitter profile info:', profileInfo);
     } catch (error) {
       console.error('Error fetching Twitter profile:', error);
+      if (reqId !== twitterRequestIdRef.current) return;
       setTwitterProfileInfo(null);
       // Ensure we default to original view and clear ASCII state on error as well
       setViewOriginal(true);
@@ -259,7 +271,7 @@ function ImageUploadEdit({ onImageUploaded }: ImageUploadEditProps) {
       clearTwitterAsciiState();
       resetCopy();
     } finally {
-      setIsFetchingTwitter(false);
+      if (reqId === twitterRequestIdRef.current) setIsFetchingTwitter(false);
     }
   };
 
@@ -299,7 +311,9 @@ function ImageUploadEdit({ onImageUploaded }: ImageUploadEditProps) {
               true,
               profileImageFile,
               density,
-              contrast
+              contrast,
+              { targetCharWidth: 160 }
+              
             );
             const asciiFile = await asciiToImage(gen.rich, backgroundColor, isCheckedColor, profileImageFile.name);
             setAsciiProfileImage(asciiFile);
@@ -319,7 +333,8 @@ function ImageUploadEdit({ onImageUploaded }: ImageUploadEditProps) {
               true,
               bannerImageFile,
               density,
-              contrast
+              contrast,
+              { targetCharWidth: 200 }
             );
             const asciiFile = await asciiToImage(gen.rich, backgroundColor, isCheckedColor, bannerImageFile.name);
             setAsciiBannerImage(asciiFile);
@@ -634,17 +649,19 @@ function ImageUploadEdit({ onImageUploaded }: ImageUploadEditProps) {
               </div>
             </div>
           }
-          <div className="flex items-center gap-2 mt-2 px-1">
-            <span>resolution: </span>
-            <Slider
-              value={[density]} // <-- Controlled value
-              onValueChange={(value) => setDensity(value[0])} // <-- Update state
-              min={1}
-              max={10}
-              step={1}
-              className="p-4 pr-0"
-            />
-          </div>
+          {!twitterProfileInfo && 
+            <div className="flex items-center gap-2 mt-2 px-1">
+              <span>resolution: </span>
+              <Slider
+                value={[density]} // <-- Controlled value
+                onValueChange={(value) => setDensity(value[0])} // <-- Update state
+                min={1}
+                max={10}
+                step={1}
+                className="p-4 pr-0"
+              />
+            </div>
+          }
           <div className="flex items-center gap-2 mt-2 px-1">
             <span>contrast: </span>
             <Slider
