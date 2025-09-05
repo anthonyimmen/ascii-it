@@ -1,4 +1,11 @@
-export function imageToAscii(setType: string, color: boolean, brightness: boolean, image: File | null, backgroundColor: string = "#222222", density: number, contrast: number): Promise<File> {
+export function generateAsciiFromImage(
+  setType: string,
+  color: boolean,
+  brightness: boolean,
+  image: File | null,
+  density: number,
+  contrast: number
+): Promise<{ plain: string; rich: string }> {
   const characterSets = [
     ".:*-=+%#@",
     "⠁⠂⠃⠄⠅⠆⠇⠈⠉⠊⠋⠌⠍⠎⠏⠐⠑⠒⠓⠔⠕⠖⠗⠘⠙⠚⠛⠜⠝⠞⠟",
@@ -11,7 +18,7 @@ export function imageToAscii(setType: string, color: boolean, brightness: boolea
   } else if (setType == "⠁⠂⠃⠄⠅⠆⠇") {
     setType = characterSets[1];
   } else {
-    setType = " ░▒▓█"
+    setType = " ░▒▓█";
   }
 
   return new Promise((resolve, reject) => {
@@ -23,21 +30,21 @@ export function imageToAscii(setType: string, color: boolean, brightness: boolea
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
     const img = new Image();
-    
-    img.onload = function() {
+
+    img.onload = function () {
       // Set canvas dimensions - scale down for ASCII art
       const minDensity = 1;
       const maxDensity = 10; // You can set this to whatever you want
       const densityFactor = Math.max(minDensity, Math.min(density, maxDensity));
 
       const baseMaxWidth = Math.floor(200 * densityFactor / 10); // Base width scaled by density factor
-      const aspectRatio = img.height / img.width * .5;
+      const aspectRatio = (img.height / img.width) * 0.5;
       canvas.width = baseMaxWidth;
       canvas.height = Math.floor(baseMaxWidth * aspectRatio);
 
       // Draw image to canvas
       ctx!.drawImage(img, 0, 0, canvas.width, canvas.height);
-      
+
       // Get image data
       const imageData = ctx!.getImageData(0, 0, canvas.width, canvas.height);
       const pixels = imageData.data;
@@ -60,18 +67,18 @@ export function imageToAscii(setType: string, color: boolean, brightness: boolea
           const a = pixels[pixelIndex + 3];
 
           const pixelBrightness = Math.floor((r + g + b) / 3);
-          
+
           // Apply contrast enhancement to make whites brighter and darks darker
           const normalizedBrightness = pixelBrightness / 255;
           const enhancedBrightness = Math.pow(normalizedBrightness, 1 / contrast);
           const clampedBrightness = Math.max(0, Math.min(1, enhancedBrightness));
-          
+
           const charIndex = Math.floor(clampedBrightness * (chars.length - 1));
           const char = chars[charIndex];
 
           let styledChar = char;
           if (color || brightness) {
-            const styles = [];
+            const styles = [] as string[];
             if (color) styles.push(`color: rgb(${r}, ${g}, ${b})`);
             if (brightness) styles.push(`opacity: ${a / 255}`);
             styledChar = `<span style="${styles.join('; ')}">${char}</span>`;
@@ -80,132 +87,185 @@ export function imageToAscii(setType: string, color: boolean, brightness: boolea
         }
         asciiArt += row + '\n';
       }
-      
-      // Convert ASCII to canvas and then to File
-      const htmlCanvas = document.createElement('canvas');
-      const htmlCtx = htmlCanvas.getContext('2d');
-      
-      // Set canvas size for the ASCII art
-      const fontSize = 12;
-      const charWidth = fontSize * .5;
-      const lineHeight = fontSize;
-      const lines = asciiArt.split('\n').filter(line => line.trim().length > 0); // Remove empty lines
-      const maxLineLength = Math.max(...lines.map(line => line.replace(/<[^>]*>/g, '').length));
-      
-      htmlCanvas.width = maxLineLength * charWidth;
-      htmlCanvas.height = lines.length * lineHeight;
-      
-      // Fill background
-      htmlCtx!.fillStyle = backgroundColor;
-      htmlCtx!.fillRect(0, 0, htmlCanvas.width, htmlCanvas.height);
-      
-      // Set text properties
-      htmlCtx!.font = `${fontSize}px 'Courier New', monospace`;
-      htmlCtx!.textBaseline = 'top';
-      
-      // Draw ASCII art line by line
-      lines.forEach((line, lineIndex) => {
-        const y = lineIndex * lineHeight;
-        let charIndex = 0;
-        
-        if (color && line.includes('<span')) {
-          // Parse HTML spans for color information
-          const spanRegex = /<span style="([^"]*)"[^>]*>([^<]*)<\/span>/g;
-          let match;
-          let lastIndex = 0;
-          
-          while ((match = spanRegex.exec(line)) !== null) {
-            // Handle any plain text before this span
-            const plainText = line.substring(lastIndex, match.index);
-            for (let i = 0; i < plainText.length; i++) {
-              if (plainText[i] !== '<' && plainText[i] !== '>') {
-                const x = charIndex * charWidth;
-                htmlCtx!.fillStyle = 'white';
-                htmlCtx!.fillText(plainText[i], x, y);
-                charIndex++;
-              }
-            }
-            
-            // Parse the style attribute for color
-            const styleAttr = match[1];
-            const colorMatch = styleAttr.match(/color:\s*rgb\(([^)]+)\)/);
-            const opacityMatch = styleAttr.match(/opacity:\s*([^;]+)/);
-            
-            let fillColor = 'white';
-            if (colorMatch) {
-              const rgbValues = colorMatch[1].split(',').map(v => parseInt(v.trim()));
-              fillColor = `rgb(${rgbValues[0]}, ${rgbValues[1]}, ${rgbValues[2]})`;
-            }
-            
-            // Apply opacity if present
-            if (opacityMatch) {
-              const opacity = parseFloat(opacityMatch[1]);
-              if (colorMatch) {
-                const rgbValues = colorMatch[1].split(',').map(v => parseInt(v.trim()));
-                fillColor = `rgba(${rgbValues[0]}, ${rgbValues[1]}, ${rgbValues[2]}, ${opacity})`;
-              } else {
-                fillColor = `rgba(255, 255, 255, ${opacity})`;
-              }
-            }
-            
-            // Draw the character with the parsed color
-            const char = match[2];
-            const x = charIndex * charWidth;
-            htmlCtx!.fillStyle = fillColor;
-            htmlCtx!.fillText(char, x, y);
-            charIndex++;
-            
-            lastIndex = spanRegex.lastIndex;
-          }
-          
-          // Handle any remaining plain text after the last span
-          const remainingText = line.substring(lastIndex).replace(/<[^>]*>/g, '');
-          for (let i = 0; i < remainingText.length; i++) {
-            const x = charIndex * charWidth;
-            htmlCtx!.fillStyle = 'white';
-            htmlCtx!.fillText(remainingText[i], x, y);
-            charIndex++;
-          }
-        } else {
-          // No color styling, draw as plain white text
-          const cleanLine = line.replace(/<[^>]*>/g, '');
-          for (let i = 0; i < cleanLine.length; i++) {
-            const char = cleanLine[i];
-            const x = i * charWidth;
-            htmlCtx!.fillStyle = 'white';
-            htmlCtx!.fillText(char, x, y);
-          }
-        }
-      });
-      
-      // Convert canvas to blob and then to File
-      htmlCanvas.toBlob((blob) => {
-        if (blob) {
-          const fileName = `ascii-${image?.name || 'image.png'}`;
-          const file = new File([blob], fileName, { type: 'image/png' });
-          resolve(file);
-        } else {
-          reject(new Error('Failed to create image file'));
-        }
-      }, 'image/jpeg', 0.8);
+
+      // Plain text version for copying (no HTML)
+      const plainText = asciiArt.replace(/<[^>]*>/g, '');
+      resolve({ plain: plainText, rich: asciiArt });
     };
-    
-    img.onerror = function() {
+
+    img.onerror = function () {
       reject(new Error('Failed to load image'));
     };
-    
+
     // Load the image file
     const reader = new FileReader();
-    reader.onload = function(e) {
+    reader.onload = function (e) {
       if (e.target && e.target.result) {
         img.src = e.target.result as string;
       } else {
         reject(new Error('Failed to read image file'));
       }
     };
-    reader.onerror = function() {
+    reader.onerror = function () {
       reject(new Error('Failed to read image file'));
     };
     reader.readAsDataURL(image);
+  });
+}
+
+export function asciiToImage(
+  asciiArt: string,
+  backgroundColor: string = "#222222",
+  color: boolean = false,
+  originalFileName?: string
+): Promise<File> {
+  return new Promise((resolve, reject) => {
+    const htmlCanvas = document.createElement('canvas');
+    const htmlCtx = htmlCanvas.getContext('2d');
+
+    try {
+      // Set canvas size for the ASCII art
+      const fontSize = 12;
+      const charWidth = fontSize * 0.5;
+      const lineHeight = fontSize;
+      const lines = asciiArt
+        .split('\n')
+        .filter((line) => line.trim().length > 0); // Remove empty lines
+      const maxLineLength = Math.max(
+        0,
+        ...lines.map((line) => line.replace(/<[^>]*>/g, '').length)
+      );
+
+      htmlCanvas.width = Math.max(1, Math.floor(maxLineLength * charWidth));
+      htmlCanvas.height = Math.max(1, Math.floor(lines.length * lineHeight));
+
+      // Fill background
+      htmlCtx!.fillStyle = backgroundColor;
+      htmlCtx!.fillRect(0, 0, htmlCanvas.width, htmlCanvas.height);
+
+      // Set text properties
+      htmlCtx!.font = `${fontSize}px 'Courier New', monospace`;
+      htmlCtx!.textBaseline = 'top';
+
+      // Draw ASCII art line by line
+      lines.forEach((line, lineIndex) => {
+        const y = lineIndex * lineHeight;
+        let chIndex = 0;
+
+        if (color && line.includes('<span')) {
+          // Parse HTML spans for color information
+          const spanRegex = /<span style="([^"]*)"[^>]*>([^<]*)<\/span>/g;
+          let match;
+          let lastIndex = 0;
+
+          while ((match = spanRegex.exec(line)) !== null) {
+            // Handle any plain text before this span
+            const plainText = line.substring(lastIndex, match.index);
+            for (let i = 0; i < plainText.length; i++) {
+              if (plainText[i] !== '<' && plainText[i] !== '>') {
+                const x = chIndex * charWidth;
+                htmlCtx!.fillStyle = 'white';
+                htmlCtx!.fillText(plainText[i], x, y);
+                chIndex++;
+              }
+            }
+
+            // Parse the style attribute for color
+            const styleAttr = match[1];
+            const colorMatch = styleAttr.match(/color:\s*rgb\(([^)]+)\)/);
+            const opacityMatch = styleAttr.match(/opacity:\s*([^;]+)/);
+
+            let fillColor = 'white';
+            if (colorMatch) {
+              const rgbValues = colorMatch[1].split(',').map((v) => parseInt(v.trim()));
+              fillColor = `rgb(${rgbValues[0]}, ${rgbValues[1]}, ${rgbValues[2]})`;
+            }
+
+            // Apply opacity if present
+            if (opacityMatch) {
+              const opacity = parseFloat(opacityMatch[1]);
+              if (colorMatch) {
+                const rgbValues = colorMatch[1].split(',').map((v) => parseInt(v.trim()));
+                fillColor = `rgba(${rgbValues[0]}, ${rgbValues[1]}, ${rgbValues[2]}, ${opacity})`;
+              } else {
+                fillColor = `rgba(255, 255, 255, ${opacity})`;
+              }
+            }
+
+            // Draw the character with the parsed color
+            const ch = match[2];
+            const x = chIndex * charWidth;
+            htmlCtx!.fillStyle = fillColor;
+            htmlCtx!.fillText(ch, x, y);
+            chIndex++;
+
+            lastIndex = spanRegex.lastIndex;
+          }
+
+          // Handle any remaining plain text after the last span
+          const remainingText = line.substring(lastIndex).replace(/<[^>]*>/g, '');
+          for (let i = 0; i < remainingText.length; i++) {
+            const x = chIndex * charWidth;
+            htmlCtx!.fillStyle = 'white';
+            htmlCtx!.fillText(remainingText[i], x, y);
+            chIndex++;
+          }
+        } else {
+          // No color styling, draw as plain white text
+          const cleanLine = line.replace(/<[^>]*>/g, '');
+          for (let i = 0; i < cleanLine.length; i++) {
+            const ch = cleanLine[i];
+            const x = i * charWidth;
+            htmlCtx!.fillStyle = 'white';
+            htmlCtx!.fillText(ch, x, y);
+          }
+        }
+      });
+
+      // Convert canvas to blob and then to File
+      htmlCanvas.toBlob(
+        (blob) => {
+          if (blob) {
+            const fileName = `ascii-${originalFileName || 'image.png'}`;
+            const file = new File([blob], fileName, { type: 'image/png' });
+            resolve(file);
+          } else {
+            reject(new Error('Failed to create image file'));
+          }
+        },
+        'image/jpeg',
+        0.8
+      );
+    } catch (e) {
+      reject(e);
+    }
+  });
+}
+
+// Backward-compatible wrapper: generate text then render to image
+export function imageToAscii(
+  setType: string,
+  color: boolean,
+  brightness: boolean,
+  image: File | null,
+  backgroundColor: string = "#222222",
+  density: number,
+  contrast: number
+): Promise<File> {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const { rich } = await generateAsciiFromImage(
+        setType,
+        color,
+        brightness,
+        image,
+        density,
+        contrast
+      );
+      const out = await asciiToImage(rich, backgroundColor, color, image?.name);
+      resolve(out);
+    } catch (e) {
+      reject(e);
+    }
   });
 }

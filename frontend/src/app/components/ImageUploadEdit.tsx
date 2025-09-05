@@ -3,9 +3,9 @@
 import { Slider } from '@/components/ui/slider';
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { Checkbox } from './Checkbox';
-import { imageToAscii } from './ImageToAscii';
+import { generateAsciiFromImage, asciiToImage } from './ImageToAscii';
 import Dropdown from './Dropdown';
-import { generateAsciiText, fillContainer, downloadImage } from '../utils/imageUtils';
+import { fillContainer, downloadImage } from '../utils/imageUtils';
 import { formatFileSize, cleanupObjectURL, fetchProfileInfo, getHighResProfileImageUrl, getHighResBannerUrl } from '../utils/fileUtils';
 
 interface ImageUploadEditProps {
@@ -284,7 +284,7 @@ function ImageUploadEdit({ onImageUploaded }: ImageUploadEditProps) {
       // Prefer Twitter flow if a profile is loaded
       if (twitterProfileInfo) {
         // Handle Twitter profile images
-        const promises: Promise<void>[] = [];
+        const tasks: Promise<string | null>[] = [];
         let profileAsciiText: string | null = null;
         let bannerAsciiText: string | null = null;
         
@@ -292,41 +292,43 @@ function ImageUploadEdit({ onImageUploaded }: ImageUploadEditProps) {
         if (twitterProfileInfo.profile_image_url_https) {
           const hiResProfileUrl = getHighResProfileImageUrl(twitterProfileInfo.profile_image_url_https);
           const profileImageFile = await urlToFile(hiResProfileUrl, 'profile.jpg');
-          promises.push(
-            imageToAscii(characterSet, isCheckedColor, true, profileImageFile, backgroundColor, density, contrast)
-              .then(asciiFile => setAsciiProfileImage(asciiFile))
-          );
-          // Also generate ASCII text for copy
-          promises.push(
-            generateAsciiText(
-              profileImageFile,
+          tasks.push((async () => {
+            const gen = await generateAsciiFromImage(
               characterSet,
+              isCheckedColor,
+              true,
+              profileImageFile,
               density,
-              contrast,
-              containerRef,
-              1,
-              { x: 0, y: 0 },
-              { targetCharWidth: 160, targetCharHeight: 60 }
-            ).then(text => { profileAsciiText = text; })
-          );
+              contrast
+            );
+            const asciiFile = await asciiToImage(gen.rich, backgroundColor, isCheckedColor, profileImageFile.name);
+            setAsciiProfileImage(asciiFile);
+            profileAsciiText = gen.plain;
+            return gen.plain;
+          })());
         }
         
         // Generate ASCII for banner image
         if (twitterProfileInfo.profile_banner_url) {
           const hiResBannerUrl = getHighResBannerUrl(twitterProfileInfo.profile_banner_url);
           const bannerImageFile = await urlToFile(hiResBannerUrl, 'banner.jpg');
-          promises.push(
-            imageToAscii(characterSet, isCheckedColor, true, bannerImageFile, backgroundColor, density, contrast)
-              .then(asciiFile => setAsciiBannerImage(asciiFile))
-          );
-          // Also generate ASCII text for copy
-          promises.push(
-            generateAsciiText(bannerImageFile, characterSet, density, contrast, containerRef, 1, { x: 0, y: 0 }, { targetCharWidth: 200, targetCharHeight: 25 })
-              .then(text => { bannerAsciiText = text; })
-          );
+          tasks.push((async () => {
+            const gen = await generateAsciiFromImage(
+              characterSet,
+              isCheckedColor,
+              true,
+              bannerImageFile,
+              density,
+              contrast
+            );
+            const asciiFile = await asciiToImage(gen.rich, backgroundColor, isCheckedColor, bannerImageFile.name);
+            setAsciiBannerImage(asciiFile);
+            bannerAsciiText = gen.plain;
+            return gen.plain;
+          })());
         }
         
-        await Promise.all(promises);
+        await Promise.all(tasks);
         const maybeTexts: (string | null)[] = [profileAsciiText, bannerAsciiText];
         const parts: string[] = maybeTexts.filter((p): p is string => p !== null);
         if (parts.length > 0) {
@@ -340,12 +342,17 @@ function ImageUploadEdit({ onImageUploaded }: ImageUploadEditProps) {
         setViewOriginal(false); // Switch to ASCII view after generation
       } else if (image) {
         // Handle regular image upload
-        const asciiImageFile = await imageToAscii(characterSet, isCheckedColor, true, image, backgroundColor, density, contrast);
+        const gen = await generateAsciiFromImage(
+          characterSet,
+          isCheckedColor,
+          true,
+          image,
+          density,
+          contrast
+        );
+        setAsciiText(gen.plain);
+        const asciiImageFile = await asciiToImage(gen.rich, backgroundColor, isCheckedColor, image.name);
         setAsciiImage(asciiImageFile);
-        
-        // Generate ASCII text without image file conversion
-        const asciiText = await generateAsciiText(image, characterSet, density, contrast, containerRef, zoom, pan);
-        setAsciiText(asciiText);
         setCopyState('copy'); // Reset copy state when new image is generated
         
         setViewOriginal(false); // Switch to ASCII view after generation
