@@ -2,7 +2,13 @@
 
 import Image from "next/image";
 
-export default function TwitterCard() {
+interface TwitterCardProps {
+  bannerUrl: string;
+  profileUrl: string;
+  username: string; // without @ or with? We'll render with @ prefix below
+}
+
+export default function TwitterCard({ bannerUrl, profileUrl, username }: TwitterCardProps) {
   // Uses public/test-images/twitter/{banner.jpg, profile.jpg}
   // Layout: square. Banner on top, profile avatar bottom-left overlapping banner edge,
   // and username label below.
@@ -29,7 +35,7 @@ export default function TwitterCard() {
           }}
         >
           <Image
-            src="/test-images/twitter/banner.jpg"
+            src={bannerUrl}
             alt="Twitter banner"
             fill
             sizes="100%"
@@ -54,7 +60,7 @@ export default function TwitterCard() {
           }}
         >
           <Image
-            src="/test-images/twitter/profile.jpg"
+            src={profileUrl}
             alt="Twitter profile"
             fill
             sizes="100%"
@@ -76,7 +82,7 @@ export default function TwitterCard() {
             textShadow: "0 1px 2px rgba(0,0,0,0.6)",
           }}
         >
-          @mangagallery_
+          {username.startsWith('@') ? username : `@${username}`}
         </div>
       </div>
       <style jsx>{`

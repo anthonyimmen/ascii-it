@@ -28,6 +28,12 @@ export default function ImageGallery({ refreshTrigger }: ImageGalleryProps) {
   const [loadedImages, setLoadedImages] = useState<Set<number>>(new Set());
   const [user, setUser] = useState<User | null>(auth.currentUser);
   const [viewMode, setViewMode] = useState<'global' | 'user'>('global');
+  const [twitterCards, setTwitterCards] = useState<{
+    id: number;
+    username: string;
+    bannerUrl: string | null;
+    profileUrl: string | null;
+  }[]>([]);
 
   const handleImageLoad = (imageId: number) => {
     setLoadedImages(prev => new Set(prev).add(imageId));
@@ -49,6 +55,7 @@ export default function ImageGallery({ refreshTrigger }: ImageGalleryProps) {
 
       try {
         let items: ImageData[] = [];
+        let twItems: { id: number; username: string; bannerUrl: string | null; profileUrl: string | null }[] = [];
 
         if (viewMode === 'user') {
           if (!user) {
@@ -56,8 +63,8 @@ export default function ImageGallery({ refreshTrigger }: ImageGalleryProps) {
             setLoading(false);
             return;
           }
-          const dir = `users/${user.uid}/ascii`;
-          const folderRef = storageRef(storage, dir);
+          const asciiDir = `users/${user.uid}/ascii`;
+          const folderRef = storageRef(storage, asciiDir);
           const res = await listAll(folderRef);
           const files = await Promise.all(
             res.items.map(async (itemRef) => {
@@ -74,6 +81,31 @@ export default function ImageGallery({ refreshTrigger }: ImageGalleryProps) {
             })
           );
           items = files;
+          // Twitter cards under users/{uid}/twitter/{username}/{profile|banner}.png
+          const twitterRoot = storageRef(storage, `users/${user.uid}/twitter`);
+          const usernamesList = await listAll(twitterRoot).catch(() => ({ prefixes: [] as any[] }));
+          const perUserCards = await Promise.all(
+            usernamesList.prefixes.map(async (usernamePrefix: any) => {
+              try {
+                const username = usernamePrefix.name;
+                const userDir = storageRef(storage, usernamePrefix.fullPath);
+                const list = await listAll(userDir);
+                let banner: string | null = null;
+                let profile: string | null = null;
+                for (const item of list.items) {
+                  if (!banner && /banner/i.test(item.name)) banner = await getDownloadURL(item);
+                  if (!profile && /profile/i.test(item.name)) profile = await getDownloadURL(item);
+                }
+                if (banner || profile) {
+                  return { id: 0, username, bannerUrl: banner, profileUrl: profile };
+                }
+                return null;
+              } catch {
+                return null;
+              }
+            })
+          );
+          twItems = perUserCards.filter(Boolean) as any;
         } else {
           // Global view: list all users' ascii folders and aggregate
           const usersRef = storageRef(storage, 'users');
@@ -105,15 +137,52 @@ export default function ImageGallery({ refreshTrigger }: ImageGalleryProps) {
             })
           );
           items = perUserFiles.flat();
+
+          // Also gather Twitter cards globally: users/*/twitter/{username}/{files}
+          const perUserTw = await Promise.all(
+            usersList.prefixes.map(async (userPrefix) => {
+              try {
+                const twitterRef = storageRef(storage, `${userPrefix.fullPath}/twitter`);
+                const usernamesList = await listAll(twitterRef);
+                const cards = await Promise.all(
+                  usernamesList.prefixes.map(async (usernamePrefix: any) => {
+                    try {
+                      const username = usernamePrefix.name;
+                      const userDir = storageRef(storage, usernamePrefix.fullPath);
+                      const list = await listAll(userDir);
+                      let banner: string | null = null;
+                      let profile: string | null = null;
+                      for (const item of list.items) {
+                        if (!banner && /banner/i.test(item.name)) banner = await getDownloadURL(item);
+                        if (!profile && /profile/i.test(item.name)) profile = await getDownloadURL(item);
+                      }
+                      if (banner || profile) {
+                        return { id: 0, username, bannerUrl: banner, profileUrl: profile };
+                      }
+                      return null;
+                    } catch {
+                      return null;
+                    }
+                  })
+                );
+                return cards.filter(Boolean);
+              } catch {
+                return [] as any[];
+              }
+            })
+          );
+          twItems = (perUserTw.flat() as any[]);
         }
 
         // Sort newest-first by filename (relies on timestamp prefix in names)
         items.sort((a, b) => (a.filename < b.filename ? 1 : -1));
         // Reassign ids after sort
         items = items.map((item, idx) => ({ ...item, id: idx + 1 }));
+        twItems = twItems.map((item, idx) => ({ ...item, id: idx + 1 }));
 
         if (!cancelled) {
           setImages(items);
+          setTwitterCards(twItems);
           setLoading(false);
         }
       } catch (e) {
@@ -158,7 +227,7 @@ export default function ImageGallery({ refreshTrigger }: ImageGalleryProps) {
     );
   }
 
-  if (images.length === 0) {
+  if (images.length === 0 && twitterCards.length === 0) {
     return (
       <div style={{ 
         width: '100%', 
@@ -226,22 +295,26 @@ export default function ImageGallery({ refreshTrigger }: ImageGalleryProps) {
           scrollbarWidth: 'none'
         }}
       >
-        {/* Twitter composite card */}
-        <div
-          className="gallery-image"
-          style={{
-            flexShrink: 0,
-            width: '120px',
-            height: '120px',
-            borderRadius: '6px',
-            overflow: 'hidden',
-            backgroundColor: 'rgba(255, 255, 255, 0.05)',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
-            position: 'relative'
-          }}
-        >
-          <TwitterCard />
-        </div>
+        {twitterCards.map((card) => (
+          <div
+            key={`tw-${card.id}-${card.username}`}
+            className="gallery-image"
+            style={{
+              flexShrink: 0,
+              width: '120px',
+              height: '120px',
+              borderRadius: '6px',
+              overflow: 'hidden',
+              backgroundColor: 'rgba(255, 255, 255, 0.05)',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              position: 'relative'
+            }}
+          >
+            {card.bannerUrl && card.profileUrl ? (
+              <TwitterCard bannerUrl={card.bannerUrl} profileUrl={card.profileUrl} username={card.username} />
+            ) : null}
+          </div>
+        ))}
 {images.map((image) => {
           const isLoaded = loadedImages.has(image.id);
           return (

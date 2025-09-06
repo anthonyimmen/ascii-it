@@ -399,7 +399,6 @@ function ImageUploadEdit({ onImageUploaded }: ImageUploadEditProps) {
   };
 
   const handlePostImage = async () => {
-    if (!asciiImage) return;
     if (!auth.currentUser) {
       console.warn('user must be logged in to post');
       return;
@@ -408,16 +407,40 @@ function ImageUploadEdit({ onImageUploaded }: ImageUploadEditProps) {
     try {
       const user = auth.currentUser;
       const uid = user!.uid;
-      const baseName = (asciiImage.name || 'ascii-image.png').replace(/\s+/g, '-');
       const ts = new Date().toISOString().replace(/[:.]/g, '-');
-      const objectPath = `users/${uid}/ascii/${ts}-${baseName}`;
 
-      // Use the default bucket configured in Firebase (from .env)
-      const ref = storageRef(storage, objectPath);
-      const metadata = { contentType: asciiImage.type || 'image/png', customMetadata: { uid, source: 'ascii-it' } };
-      await uploadBytes(ref, asciiImage, metadata);
-      const url = await getDownloadURL(ref);
-      console.log('ASCII image uploaded to Firebase Storage:', { path: objectPath, url });
+      // If we are in Twitter flow and have generated ascii for profile/banner, upload those
+      if (twitterProfileInfo && (asciiProfileImage || asciiBannerImage)) {
+        const username = (twitterProfileInfo.screen_name || twitterProfileInfo.username || twitterUsername || 'twitter').toString();
+        const basePath = `users/${uid}/twitter/${username}`;
+        const uploads: Promise<any>[] = [];
+        if (asciiProfileImage) {
+          const profilePath = `${basePath}/profile.png`;
+          const profileRef = storageRef(storage, profilePath);
+          const meta = { contentType: asciiProfileImage.type || 'image/png', customMetadata: { uid, source: 'ascii-it', username } };
+          uploads.push(uploadBytes(profileRef, asciiProfileImage, meta));
+        }
+        if (asciiBannerImage) {
+          const bannerPath = `${basePath}/banner.png`;
+          const bannerRef = storageRef(storage, bannerPath);
+          const meta = { contentType: asciiBannerImage.type || 'image/png', customMetadata: { uid, source: 'ascii-it', username } };
+          uploads.push(uploadBytes(bannerRef, asciiBannerImage, meta));
+        }
+        await Promise.all(uploads);
+        console.log('Uploaded Twitter ASCII images for', username);
+      } else if (asciiImage) {
+        // Regular ascii image upload
+        const baseName = (asciiImage.name || 'ascii-image.png').replace(/\s+/g, '-');
+        const objectPath = `users/${uid}/ascii/${ts}-${baseName}`;
+        const ref = storageRef(storage, objectPath);
+        const metadata = { contentType: asciiImage.type || 'image/png', customMetadata: { uid, source: 'ascii-it' } };
+        await uploadBytes(ref, asciiImage, metadata);
+        const url = await getDownloadURL(ref);
+        console.log('ASCII image uploaded to Firebase Storage:', { path: objectPath, url });
+      } else {
+        console.warn('nothing to post: no ascii image(s) found');
+        return;
+      }
       onImageUploaded?.();
     } catch (error) {
       console.error('Error uploading image:', error);
@@ -429,7 +452,7 @@ function ImageUploadEdit({ onImageUploaded }: ImageUploadEditProps) {
     ? !(asciiProfileImage || asciiBannerImage)
     : !asciiImage);
 
-  const postDisabled = !asciiImage || !currentUser;
+  const postDisabled = (!currentUser) || (!twitterProfileInfo ? !asciiImage : !(asciiProfileImage || asciiBannerImage));
 
   return (
     <div 
