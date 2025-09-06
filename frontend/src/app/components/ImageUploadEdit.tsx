@@ -510,7 +510,7 @@ function ImageUploadEdit({ onImageUploaded }: ImageUploadEditProps) {
 
       {/* Preview and Controls */}
       {(displayImageUrl || twitterProfileInfo) && (
-        <div>
+        <div className="px-10 mt-3">
           {!twitterProfileInfo && displayImageUrl &&
             <div className="flex flex-col-reverse justify-center items-center align-center gap-2">
               <div
@@ -570,14 +570,14 @@ function ImageUploadEdit({ onImageUploaded }: ImageUploadEditProps) {
             </div>
           } 
           {twitterProfileInfo && 
-            <>
-              <div className="flex flex-col-reverse justify-center items-center align-center gap-2 mb-13">
+            <div className="flex flex-col gap-9 sm:gap-12">
+              <div className="flex flex-col-reverse justify-center items-center align-center">
                 <div
                   className="relative overflow"
                   style={{
                     backgroundColor: "#292929",
-                    width: '500px',
-                    height: '125px',
+                    width: 'min(500px, 90vw)',
+                    aspectRatio: '4 / 1',
                     borderRadius: 3,
                     border: "dashed #cececeff 1px",
                   }}
@@ -596,11 +596,12 @@ function ImageUploadEdit({ onImageUploaded }: ImageUploadEditProps) {
                     <div
                       className="absolute rounded-full overflow-hidden"
                       style={{
-                        width: '80px',
-                        height: '80px',
-                        left: '20px',
-                        bottom: '-40px', // Half of the image height to make it overlap
+                        width: '17%',
+                        height: '70%',
+                        left: '4%',
+                        bottom: '-40%', // Half overlap, responsive to container
                         border: "dashed #cececeff 1px",
+                        marginBottom: '10px'
                       }}
                     >
                       <img
@@ -612,7 +613,7 @@ function ImageUploadEdit({ onImageUploaded }: ImageUploadEditProps) {
                   )}
                 </div>
               </div>
-              <div className='flex justify-between items-center align-center mt-4 mx-auto' style={{width: '500px'}}>
+              <div className='flex justify-between items-center align-center mt-0 mx-auto' style={{width: 'min(500px, 90vw)'}}>
                 <div className='flex flex-col gap-2 justify-center align-center' style={{maxWidth: "300px"}}>
                   <span className="text-sm text-gray-400 px-1">profile: @{twitterProfileInfo.screen_name}</span>
                 </div>
@@ -630,7 +631,7 @@ function ImageUploadEdit({ onImageUploaded }: ImageUploadEditProps) {
                   }
                 </div>
               </div>
-            </>
+            </div>
           }
           {!twitterProfileInfo && 
             <div className='flex justify-between items-center align-center mt-4 mx-auto' style={{width: isCheckedTwitterBanner ? "min(500px, 90vw)" : "min(400px, 90vw)", transition: 'width 0.7s cubic-bezier(.4,0,.2,1), height 0.7s cubic-bezier(.4,0,.2,1)'}}>

@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import ImageUploadEdit from './components/ImageUploadEdit';
 import ImageGallery from './components/ImageGallery';
 import Login from './components/Login';
@@ -13,11 +13,24 @@ export default function Home() {
   const { refreshTrigger, triggerRefresh } = useImageRefresh();
   const [showLogin, setShowLogin] = useState(false);
   const [user, setUser] = useState<User | null>(null);
+  const [resetKey, setResetKey] = useState(0);
+  const prevUserRef = useRef<User | null>(null);
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, setUser);
     return () => unsub();
   }, []);
+
+  // When a user logs out, force remount key to clear component state
+  useEffect(() => {
+    const prev = prevUserRef.current;
+    if (prev && !user) {
+      setResetKey((k) => k + 1);
+      // also trigger a gallery refresh token reset if desired
+      // triggerRefresh();
+    }
+    prevUserRef.current = user;
+  }, [user]);
   
   return (
     <div
@@ -93,9 +106,9 @@ export default function Home() {
         <p style={{ margin: '0.25rem', fontSize: 'clamp(0.875rem, 2.5vw, 1rem)', padding: '1rem 0rem', textAlign: 'center' }}>
           just ascii it. convert your twitter or an image to ascii art.
         </p>
-        <ImageUploadEdit onImageUploaded={triggerRefresh} />
+        <ImageUploadEdit key={`edit-${resetKey}`} onImageUploaded={triggerRefresh} />
       </div>
-      <ImageGallery refreshTrigger={refreshTrigger} />
+      <ImageGallery key={`gallery-${resetKey}`} refreshTrigger={refreshTrigger} />
       
       {showLogin && (
         <div
