@@ -403,40 +403,37 @@ function ImageUploadEdit({ onImageUploaded }: ImageUploadEditProps) {
       console.warn('user must be logged in to post');
       return;
     }
-    
     try {
-      const user = auth.currentUser;
-      const uid = user!.uid;
-      const ts = new Date().toISOString().replace(/[:.]/g, '-');
-
-      // If we are in Twitter flow and have generated ascii for profile/banner, upload those
+      const token = await auth.currentUser.getIdToken();
       if (twitterProfileInfo && (asciiProfileImage || asciiBannerImage)) {
-        const username = (twitterProfileInfo.screen_name || twitterProfileInfo.username || twitterUsername || 'twitter').toString();
-        const basePath = `users/${uid}/twitter/${username}`;
-        const uploads: Promise<any>[] = [];
-        if (asciiProfileImage) {
-          const profilePath = `${basePath}/profile.png`;
-          const profileRef = storageRef(storage, profilePath);
-          const meta = { contentType: asciiProfileImage.type || 'image/png', customMetadata: { uid, source: 'ascii-it', username } };
-          uploads.push(uploadBytes(profileRef, asciiProfileImage, meta));
+        // Send both profile and banner to backend for safety + upload
+        const form = new FormData();
+        form.append('twitterUsername', twitterProfileInfo.screen_name || twitterProfileInfo.username || twitterUsername || 'twitter');
+        if (asciiProfileImage) form.append('profile', asciiProfileImage);
+        if (asciiBannerImage) form.append('banner', asciiBannerImage);
+        const resp = await fetch('http://localhost:3000/api/twitter-images', {
+          method: 'PUT',
+          headers: { Authorization: `Bearer ${token}` },
+          body: form,
+        });
+        if (!resp.ok) {
+          const e = await resp.json().catch(() => ({}));
+          throw new Error(`upload_failed: ${resp.status} ${JSON.stringify(e)}`);
         }
-        if (asciiBannerImage) {
-          const bannerPath = `${basePath}/banner.png`;
-          const bannerRef = storageRef(storage, bannerPath);
-          const meta = { contentType: asciiBannerImage.type || 'image/png', customMetadata: { uid, source: 'ascii-it', username } };
-          uploads.push(uploadBytes(bannerRef, asciiBannerImage, meta));
-        }
-        await Promise.all(uploads);
-        console.log('Uploaded Twitter ASCII images for', username);
+        await resp.json();
       } else if (asciiImage) {
-        // Regular ascii image upload
-        const baseName = (asciiImage.name || 'ascii-image.png').replace(/\s+/g, '-');
-        const objectPath = `users/${uid}/ascii/${ts}-${baseName}`;
-        const ref = storageRef(storage, objectPath);
-        const metadata = { contentType: asciiImage.type || 'image/png', customMetadata: { uid, source: 'ascii-it' } };
-        await uploadBytes(ref, asciiImage, metadata);
-        const url = await getDownloadURL(ref);
-        console.log('ASCII image uploaded to Firebase Storage:', { path: objectPath, url });
+        const form = new FormData();
+        form.append('image', asciiImage);
+        const resp = await fetch('http://localhost:3000/api/images', {
+          method: 'PUT',
+          headers: { Authorization: `Bearer ${token}` },
+          body: form,
+        });
+        if (!resp.ok) {
+          const e = await resp.json().catch(() => ({}));
+          throw new Error(`upload_failed: ${resp.status} ${JSON.stringify(e)}`);
+        }
+        await resp.json();
       } else {
         console.warn('nothing to post: no ascii image(s) found');
         return;

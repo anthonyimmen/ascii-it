@@ -146,7 +146,7 @@ export function asciiToImage(
       const layoutHeight = Math.max(1, Math.floor(lines.length * lineHeight));
 
       // Render at higher pixel density for sharper output
-      const scale = 4;
+      const scale = 2;
       const effectiveScale = Math.max(1, Math.floor(pixelScale ?? scale));
 
       htmlCanvas.width = layoutWidth * effectiveScale;
