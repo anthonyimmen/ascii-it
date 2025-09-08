@@ -7,21 +7,14 @@ import fs from 'fs'
 const initAdmin = () => {
   if (admin.apps.length) return admin.app()
 
-  // Prefer explicit PROJECT_ID if provided; otherwise fall back to GCP env
+  // Prefer explicit PROJECT_ID if provided; otherwise fall back to GCP env or metadata
   const projectId =
     process.env.PROJECT_ID ||
     process.env.GOOGLE_CLOUD_PROJECT ||
     process.env.GCLOUD_PROJECT
 
-  if (!projectId) {
-    throw new Error('PROJECT_ID is required (or GOOGLE_CLOUD_PROJECT)')
-  }
-
-  // Storage bucket: allow override via env; otherwise use default appspot bucket
+  // Storage bucket: allow override via env; otherwise use default appspot bucket (when project known)
   let storageBucket = process.env.STORAGE_BUCKET
-  if (!storageBucket) {
-    storageBucket = `${projectId}.appspot.com`
-  }
 
   // If running on GCP (Cloud Functions/Run), rely on Application Default Credentials.
   // Detect via common envs set by those platforms.
@@ -32,7 +25,10 @@ const initAdmin = () => {
   )
 
   if (runningOnGcp) {
-    return admin.initializeApp({ projectId, storageBucket })
+    const options = {}
+    if (projectId) options.projectId = projectId
+    if (storageBucket) options.storageBucket = storageBucket
+    return admin.initializeApp(options)
   }
 
   // Local/dev: try to load service account from env or file

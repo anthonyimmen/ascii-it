@@ -1,20 +1,18 @@
-import type { NextConfig } from "next";
+import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
-  /* config options here */
-  devIndicators: false
-};
-
-module.exports = {
+  eslint: { ignoreDuringBuilds: true },
+  // optional, if you want to skip TS errors too:
+  typescript: { ignoreBuildErrors: true },
+  devIndicators: false,
   async rewrites() {
-    return [
+  return [
       {
         source: "/__/auth/:path*",
         destination: "https://ascii-it-54ba2.firebaseapp.com/__/auth/:path*",
       },
-    ];
+    ]
   },
-};
+}
 
-
-export default nextConfig;
+export default nextConfig

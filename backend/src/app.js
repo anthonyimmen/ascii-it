@@ -22,6 +22,10 @@ app.use((req,res,next)=>{ res.setHeader('Vary','Origin'); next(); });
 
 app.use(express.json());
 
+// Basic health endpoints to aid platform readiness checks
+app.get('/', (_req, res) => res.status(200).send('ok'));
+app.get('/healthz', (_req, res) => res.status(200).json({ status: 'ok' }));
+
 // Multer in-memory storage
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
 

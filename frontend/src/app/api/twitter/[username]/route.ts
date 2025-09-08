@@ -1,12 +1,14 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import axios from 'axios';
 
+// Use a wide context type to satisfy Next's route validation
 export async function GET(
-  request: NextRequest,
-  { params }: { params: { username: string } }
+  _request: Request,
+  context: { params: Record<string, string | string[]> }
 ) {
   try {
-    const { username } = params;
+    const p = context?.params?.username as string | string[] | undefined;
+    const username = Array.isArray(p) ? p[0] : p;
     
     if (!username) {
       return NextResponse.json({ error: 'Username is required' }, { status: 400 });
