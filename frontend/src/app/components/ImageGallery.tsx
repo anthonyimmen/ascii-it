@@ -335,7 +335,7 @@ export default function ImageGallery({ refreshTrigger }: ImageGalleryProps) {
               }}
             >
               <Image
-                src={image.file_path || `http://localhost:3000/images/${image.filename}`}
+                src={image.file_path || `https://ascii-it--ascii-it-54ba2.us-central1.hosted.app/images/${image.filename}`}
                 alt={image.original_name}
                 width={120}
                 height={120}

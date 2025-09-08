@@ -411,7 +411,7 @@ function ImageUploadEdit({ onImageUploaded }: ImageUploadEditProps) {
         form.append('twitterUsername', twitterProfileInfo.screen_name || twitterProfileInfo.username || twitterUsername || 'twitter');
         if (asciiProfileImage) form.append('profile', asciiProfileImage);
         if (asciiBannerImage) form.append('banner', asciiBannerImage);
-        const resp = await fetch('http://localhost:3000/api/twitter-images', {
+        const resp = await fetch('https://ascii-it--ascii-it-54ba2.us-central1.hosted.app/api/twitter-images', {
           method: 'PUT',
           headers: { Authorization: `Bearer ${token}` },
           body: form,
@@ -424,7 +424,7 @@ function ImageUploadEdit({ onImageUploaded }: ImageUploadEditProps) {
       } else if (asciiImage) {
         const form = new FormData();
         form.append('image', asciiImage);
-        const resp = await fetch('http://localhost:3000/api/images', {
+        const resp = await fetch('https://ascii-it--ascii-it-54ba2.us-central1.hosted.app/api/images', {
           method: 'PUT',
           headers: { Authorization: `Bearer ${token}` },
           body: form,
