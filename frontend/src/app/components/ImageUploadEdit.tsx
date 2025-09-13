@@ -6,7 +6,7 @@ import { Checkbox } from './Checkbox';
 import { generateAsciiFromImage, asciiToImage } from './ImageToAscii';
 import Dropdown from './Dropdown';
 import { fillContainer, downloadImage } from '../utils/imageUtils';
-import { formatFileSize, cleanupObjectURL, fetchProfileInfo, getHighResProfileImageUrl, getHighResBannerUrl } from '../utils/fileUtils';
+import { formatFileSize, cleanupObjectURL, fetchProfileInfo } from '../utils/fileUtils';
 import { auth, storage } from '../firebase/firebase';
 import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { onAuthStateChanged, type User } from 'firebase/auth';
@@ -18,6 +18,7 @@ interface ImageUploadEditProps {
 function ImageUploadEdit({ onImageUploaded }: ImageUploadEditProps) {
   const [image, setImage] = useState<File | null>(null);
   const [twitterProfileInfo, setTwitterProfileInfo] = useState<any | null>(null);
+  const [fetchedTwitterUsername, setFetchedTwitterUsername] = useState<string | null>(null);
   const [twitterUsername, setTwitterUsername] = useState<string>('');
   const [asciiImage, setAsciiImage] = useState<File | null>(null);
   const [asciiProfileImage, setAsciiProfileImage] = useState<File | null>(null);
@@ -223,18 +224,18 @@ function ImageUploadEdit({ onImageUploaded }: ImageUploadEditProps) {
   const handleDownloadImage = useCallback(() => {
     if (twitterProfileInfo) {
       // Download both profile and banner images
-      if (asciiProfileImage || twitterProfileInfo.profile_image_url_https) {
+      if (asciiProfileImage || twitterProfileInfo.profileUrl) {
         const profileUrl = !viewOriginal && asciiProfilePreviewUrl
           ? asciiProfilePreviewUrl
-          : getHighResProfileImageUrl(twitterProfileInfo.profile_image_url_https);
-        downloadImageFromUrl(profileUrl, `${twitterProfileInfo.screen_name}-profile${!viewOriginal ? '-ascii' : ''}.jpg`);
+          : twitterProfileInfo.profileUrl;
+        downloadImageFromUrl(profileUrl, `${fetchedTwitterUsername || 'twitter'}-profile${!viewOriginal ? '-ascii' : ''}.jpg`);
       }
       
-      if (asciiBannerImage || twitterProfileInfo.profile_banner_url) {
+      if (asciiBannerImage || twitterProfileInfo.bannerUrl) {
         const bannerUrl = !viewOriginal && asciiBannerPreviewUrl
           ? asciiBannerPreviewUrl
-          : getHighResBannerUrl(twitterProfileInfo.profile_banner_url);
-        downloadImageFromUrl(bannerUrl, `${twitterProfileInfo.screen_name}-banner${!viewOriginal ? '-ascii' : ''}.jpg`);
+          : twitterProfileInfo.bannerUrl;
+        downloadImageFromUrl(bannerUrl, `${fetchedTwitterUsername || 'twitter'}-banner${!viewOriginal ? '-ascii' : ''}.jpg`);
       }
     } else if (image) {
       // Download regular image
@@ -259,10 +260,12 @@ function ImageUploadEdit({ onImageUploaded }: ImageUploadEditProps) {
     const reqId = ++twitterRequestIdRef.current;
 
     try {
-      const profileInfo = await fetchProfileInfo(username.trim());
+      const requested = username.trim();
+      const profileInfo = await fetchProfileInfo(requested);
       // Ignore if a newer request started (e.g., user started uploading an image)
       if (reqId !== twitterRequestIdRef.current) return;
       setTwitterProfileInfo(profileInfo);
+      setFetchedTwitterUsername(requested);
       // Show original Twitter images by default until ASCII is generated
       setViewOriginal(true);
       // Clear any previous states so generation targets Twitter
@@ -310,9 +313,8 @@ function ImageUploadEdit({ onImageUploaded }: ImageUploadEditProps) {
         let bannerAsciiText: string | null = null;
         
         // Generate ASCII for profile image
-        if (twitterProfileInfo.profile_image_url_https) {
-          const hiResProfileUrl = getHighResProfileImageUrl(twitterProfileInfo.profile_image_url_https);
-          const profileImageFile = await urlToFile(hiResProfileUrl, 'profile.jpg');
+        if (twitterProfileInfo.profileUrl) {
+          const profileImageFile = await urlToFile(twitterProfileInfo.profileUrl, 'profile.jpg');
           tasks.push((async () => {
             const gen = await generateAsciiFromImage(
               characterSet,
@@ -332,9 +334,8 @@ function ImageUploadEdit({ onImageUploaded }: ImageUploadEditProps) {
         }
         
         // Generate ASCII for banner image
-        if (twitterProfileInfo.profile_banner_url) {
-          const hiResBannerUrl = getHighResBannerUrl(twitterProfileInfo.profile_banner_url);
-          const bannerImageFile = await urlToFile(hiResBannerUrl, 'banner.jpg');
+        if (twitterProfileInfo.bannerUrl) {
+          const bannerImageFile = await urlToFile(twitterProfileInfo.bannerUrl, 'banner.jpg');
           tasks.push((async () => {
             const gen = await generateAsciiFromImage(
               characterSet,
@@ -408,7 +409,7 @@ function ImageUploadEdit({ onImageUploaded }: ImageUploadEditProps) {
       if (twitterProfileInfo && (asciiProfileImage || asciiBannerImage)) {
         // Send both profile and banner to backend for safety + upload
         const form = new FormData();
-        form.append('twitterUsername', twitterProfileInfo.screen_name || twitterProfileInfo.username || twitterUsername || 'twitter');
+        form.append('twitterUsername', fetchedTwitterUsername || twitterUsername || 'twitter');
         if (asciiProfileImage) form.append('profile', asciiProfileImage);
         if (asciiBannerImage) form.append('banner', asciiBannerImage);
         const resp = await fetch('https://ascii-it--ascii-it-54ba2.us-central1.hosted.app/api/twitter-images', {
@@ -580,16 +581,16 @@ function ImageUploadEdit({ onImageUploaded }: ImageUploadEditProps) {
                   }}
                 >
                   {/* Banner Image */}
-                  {twitterProfileInfo.profile_banner_url && (
+                  {twitterProfileInfo.bannerUrl && (
                     <img
-                      src={!viewOriginal && asciiBannerPreviewUrl ? asciiBannerPreviewUrl : getHighResBannerUrl(twitterProfileInfo.profile_banner_url)}
+                      src={!viewOriginal && asciiBannerPreviewUrl ? asciiBannerPreviewUrl : twitterProfileInfo.bannerUrl}
                       alt="Twitter banner"
                       className="absolute top-0 left-0 w-full h-full object-cover"
                     />
                   )}
                   
                   {/* Profile Image - positioned in bottom left, half on banner */}
-                  {twitterProfileInfo.profile_image_url_https && (
+                  {twitterProfileInfo.profileUrl && (
                     <div
                       className="absolute rounded-full overflow-hidden"
                       style={{
@@ -602,7 +603,7 @@ function ImageUploadEdit({ onImageUploaded }: ImageUploadEditProps) {
                       }}
                     >
                       <img
-                        src={!viewOriginal && asciiProfilePreviewUrl ? asciiProfilePreviewUrl : getHighResProfileImageUrl(twitterProfileInfo.profile_image_url_https)}
+                        src={!viewOriginal && asciiProfilePreviewUrl ? asciiProfilePreviewUrl : twitterProfileInfo.profileUrl}
                         alt="Profile"
                         className="w-full h-full object-cover"
                       />
@@ -612,7 +613,7 @@ function ImageUploadEdit({ onImageUploaded }: ImageUploadEditProps) {
               </div>
               <div className='flex justify-between items-center align-center mt-0 mx-auto' style={{width: 'min(500px, 90vw)'}}>
                 <div className='flex flex-col gap-2 justify-center align-center' style={{maxWidth: "300px"}}>
-                  <span className="text-sm text-gray-400 px-1">profile: @{twitterProfileInfo.screen_name}</span>
+                  <span className="text-sm text-gray-400 px-1">profile: @{fetchedTwitterUsername || ''}</span>
                 </div>
                 <div className='flex flex-col-reverse flex-end gap-2 justify-center align-center'>
                   {/* Toggle between original and ASCII */}
