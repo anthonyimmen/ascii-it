@@ -11,7 +11,8 @@ const initAdmin = () => {
   const projectId =
     process.env.PROJECT_ID ||
     process.env.GOOGLE_CLOUD_PROJECT ||
-    process.env.GCLOUD_PROJECT
+    process.env.GCLOUD_PROJECT ||
+    process.env.projectId
 
   // Storage bucket: allow override via env; otherwise use default appspot bucket (when project known)
   let storageBucket = process.env.STORAGE_BUCKET
