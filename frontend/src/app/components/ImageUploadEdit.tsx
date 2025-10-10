@@ -7,15 +7,7 @@ import { generateAsciiFromImage, asciiToImage } from './ImageToAscii';
 import Dropdown from './Dropdown';
 import { fillContainer, downloadImage } from '../utils/imageUtils';
 import { formatFileSize, cleanupObjectURL, fetchProfileInfo } from '../utils/fileUtils';
-import { auth, storage } from '../firebase/firebase';
-import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { onAuthStateChanged, type User } from 'firebase/auth';
-
-interface ImageUploadEditProps {
-  onImageUploaded?: () => void;
-}
-
-function ImageUploadEdit({ onImageUploaded }: ImageUploadEditProps) {
+function ImageUploadEdit() {
   const [image, setImage] = useState<File | null>(null);
   const [twitterProfileInfo, setTwitterProfileInfo] = useState<any | null>(null);
   const [fetchedTwitterUsername, setFetchedTwitterUsername] = useState<string | null>(null);
@@ -49,13 +41,6 @@ function ImageUploadEdit({ onImageUploaded }: ImageUploadEditProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   // Track latest Twitter fetch to ignore stale responses
   const twitterRequestIdRef = useRef(0);
-  const [currentUser, setCurrentUser] = useState<User | null>(auth.currentUser);
-
-  useEffect(() => {
-    const unsub = onAuthStateChanged(auth, setCurrentUser);
-    return () => unsub();
-  }, []);
-
   // ---------- Helpers ----------
   const clearUploadState = useCallback(() => {
     cleanupObjectURL(previewUrl);
@@ -399,58 +384,10 @@ function ImageUploadEdit({ onImageUploaded }: ImageUploadEditProps) {
     }
   };
 
-  const handlePostImage = async () => {
-    if (!auth.currentUser) {
-      console.warn('user must be logged in to post');
-      return;
-    }
-    try {
-      const token = await auth.currentUser.getIdToken();
-      if (twitterProfileInfo && (asciiProfileImage || asciiBannerImage)) {
-        // Send both profile and banner to backend for safety + upload
-        const form = new FormData();
-        form.append('twitterUsername', fetchedTwitterUsername || twitterUsername || 'twitter');
-        if (asciiProfileImage) form.append('profile', asciiProfileImage);
-        if (asciiBannerImage) form.append('banner', asciiBannerImage);
-        const resp = await fetch('https://ascii-it--ascii-it-54ba2.us-central1.hosted.app/api/twitter-images', {
-          method: 'PUT',
-          headers: { Authorization: `Bearer ${token}` },
-          body: form,
-        });
-        if (!resp.ok) {
-          const e = await resp.json().catch(() => ({}));
-          throw new Error(`upload_failed: ${resp.status} ${JSON.stringify(e)}`);
-        }
-        await resp.json();
-      } else if (asciiImage) {
-        const form = new FormData();
-        form.append('image', asciiImage);
-        const resp = await fetch('https://ascii-it--ascii-it-54ba2.us-central1.hosted.app/api/images', {
-          method: 'PUT',
-          headers: { Authorization: `Bearer ${token}` },
-          body: form,
-        });
-        if (!resp.ok) {
-          const e = await resp.json().catch(() => ({}));
-          throw new Error(`upload_failed: ${resp.status} ${JSON.stringify(e)}`);
-        }
-        await resp.json();
-      } else {
-        console.warn('nothing to post: no ascii image(s) found');
-        return;
-      }
-      onImageUploaded?.();
-    } catch (error) {
-      console.error('Error uploading image:', error);
-    }
-  };
-
   // Disable download until ASCII is generated (for both flows)
   const isDownloadDisabled = viewOriginal || (twitterProfileInfo
     ? !(asciiProfileImage || asciiBannerImage)
     : !asciiImage);
-
-  const postDisabled = (!currentUser) || (!twitterProfileInfo ? !asciiImage : !(asciiProfileImage || asciiBannerImage));
 
   return (
     <div 
@@ -776,28 +713,6 @@ function ImageUploadEdit({ onImageUploaded }: ImageUploadEditProps) {
                   </svg>
                 )}
               </button>
-              <div className="relative group">
-                <button
-                  onClick={handlePostImage}
-                  disabled={postDisabled}
-                  aria-describedby={postDisabled ? 'post-tooltip' : undefined}
-                  className="pb-1 text-white transition flex flex-row items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-                >
-                  <span className="text-md">post</span>
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                  </svg>
-                </button>
-                {postDisabled && (
-                  <div
-                    id="post-tooltip"
-                    role="tooltip"
-                    className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-black text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10"
-                  >
-                    logged in users can post
-                  </div>
-                )}
-              </div>
             </div>
           </div>
         </div>

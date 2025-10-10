@@ -17,8 +17,6 @@
     "cors": "^2.8.5",
     "dotenv": "^16.6.1",
     "express": "^5.1.0",
-    "firebase": "^12.2.1",
-    "firebase-admin": "^12.7.0",
     "multer": "^2.0.2",
     "uuid": "^10.0.0"
   },
