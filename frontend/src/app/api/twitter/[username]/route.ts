@@ -10,7 +10,7 @@ export async function GET(
     const username = Array.isArray(p) ? p[0] : p
     if (!username) return NextResponse.json({ error: 'Username is required' }, { status: 400 })
 
-    const backendBase = 'https://ascii-it--ascii-it-54ba2.us-central1.hosted.app'
+    const backendBase = process.env.BACKEND_BASE_URL || 'http://localhost:3000'
     const resp = await fetch(`${backendBase}/api/twitter/${encodeURIComponent(username)}`)
     const data = await resp.json().catch(() => null)
     if (!resp.ok) {

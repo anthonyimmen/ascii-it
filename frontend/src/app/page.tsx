@@ -2,7 +2,6 @@
 
 import Image from 'next/image';
 import ImageUploadEdit from './components/ImageUploadEdit';
-import ImageGallery from './components/ImageGallery';
 
 export default function Home() {
   
@@ -14,19 +13,19 @@ export default function Home() {
         flexDirection: 'column',
         background: 'var(--background)',
         color: 'var(--foreground)',
-        padding: "1rem .5rem 0",
+        //padding: "1rem .5rem 0",
         overflow: "auto",
         position: 'relative',
       }}
     >
       <div
-        className="content-container"
         style={{
           flex: 1,
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'center',
           alignItems: 'center',
+          overflow: "hidden",
         }}
       >
         <div style={{ width: '100%', maxWidth: 320, display: 'flex', justifyContent: 'center' }}>
@@ -49,7 +48,6 @@ export default function Home() {
         </p>
         <ImageUploadEdit />
       </div>
-      <ImageGallery />
     </div>
   );
 }

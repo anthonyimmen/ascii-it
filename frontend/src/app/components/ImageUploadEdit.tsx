@@ -445,274 +445,282 @@ function ImageUploadEdit() {
 
       {/* Preview and Controls */}
       {(displayImageUrl || twitterProfileInfo) && (
-        <div className="px-10 mt-3">
-          {!twitterProfileInfo && displayImageUrl &&
-            <div className="flex flex-col-reverse justify-center items-center align-center gap-2">
-              <div
-                ref={containerRef}
-                className="relative overflow-hidden"
-                style={{
-                  backgroundColor: "#292929",
-                  width: isCheckedTwitterBanner ? "min(500px, 90vw)" : "min(400px, 90vw)",
-                  height: isCheckedTwitterBanner ? "min(125px, 22vh)" : "min(400px, 60vh)",
-                  borderRadius: 3,
-                  border: "dashed #cececeff 1px",
-                  cursor: isDragging ? 'grabbing' : 'grab',
-                  touchAction: 'none',
-                  transition: 'width 0.7s cubic-bezier(.4,0,.2,1), height 0.7s cubic-bezier(.4,0,.2,1)',
-                }}
-                onMouseDown={handleMouseDown}
-                onMouseMove={handleMouseMove}
-                onMouseUp={handleMouseUp}
-                onMouseLeave={handleMouseUp}
-                onTouchStart={handleTouchStart}
-                onTouchMove={handleTouchMove}
-                onTouchEnd={handleTouchEnd}
-              >
-                {!viewOriginal && displayAsciiPreviewUrl ? 
-                  <img
-                    ref={imageRef}
-                    src={displayAsciiPreviewUrl}
-                    alt="Selected preview"
-                    className="object-contain absolute top-1/2 left-1/2"
+        <div className="w-full px-4 sm:px-10 mt-3">
+          <div className="flex flex-col md:flex-row md:items-start md:justify-center md:gap-10">
+            <div className="flex flex-col items-center md:items-start md:flex-shrink-0 gap-4">
+              {!twitterProfileInfo && displayImageUrl && (
+                <div className="flex flex-col-reverse justify-center items-center align-center gap-2">
+                  <div
+                    ref={containerRef}
+                    className="relative overflow-hidden"
                     style={{
-                      width: "100%",
-                      height: "100%",
-                      transform: `translate(-50%, -50%) translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
-                      transformOrigin: 'center',
-                      pointerEvents: 'none',
-                      userSelect: 'none',
+                      backgroundColor: "#292929",
+                      width: isCheckedTwitterBanner ? "min(500px, 90vw)" : "min(400px, 90vw)",
+                      height: isCheckedTwitterBanner ? "min(125px, 22vh)" : "min(400px, 60vh)",
+                      borderRadius: 3,
+                      border: "dashed #cececeff 1px",
+                      cursor: isDragging ? 'grabbing' : 'grab',
+                      touchAction: 'none',
+                      transition: 'width 0.7s cubic-bezier(.4,0,.2,1), height 0.7s cubic-bezier(.4,0,.2,1)',
                     }}
-                    draggable={false}
-                  /> :
-                  <img
-                    ref={imageRef}
-                    src={displayImageUrl}
-                    alt="Selected preview"
-                    className="object-contain absolute top-1/2 left-1/2"
+                    onMouseDown={handleMouseDown}
+                    onMouseMove={handleMouseMove}
+                    onMouseUp={handleMouseUp}
+                    onMouseLeave={handleMouseUp}
+                    onTouchStart={handleTouchStart}
+                    onTouchMove={handleTouchMove}
+                    onTouchEnd={handleTouchEnd}
+                  >
+                    {!viewOriginal && displayAsciiPreviewUrl ? (
+                      <img
+                        ref={imageRef}
+                        src={displayAsciiPreviewUrl}
+                        alt="Selected preview"
+                        className="object-contain absolute top-1/2 left-1/2"
+                        style={{
+                          width: "100%",
+                          height: "100%",
+                          transform: `translate(-50%, -50%) translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
+                          transformOrigin: 'center',
+                          pointerEvents: 'none',
+                          userSelect: 'none',
+                        }}
+                        draggable={false}
+                      />
+                    ) : (
+                      <img
+                        ref={imageRef}
+                        src={displayImageUrl}
+                        alt="Selected preview"
+                        className="object-contain absolute top-1/2 left-1/2"
+                        style={{
+                          width: "100%",
+                          height: "100%",
+                          transform: `translate(-50%, -50%) translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
+                          transformOrigin: 'center',
+                          pointerEvents: 'none',
+                          userSelect: 'none',
+                        }}
+                        draggable={false}
+                      />
+                    )}
+                  </div>
+                </div>
+              )}
+              {twitterProfileInfo && (
+                <div className="flex flex-col-reverse justify-center items-center align-center">
+                  <div
+                    className="relative overflow"
                     style={{
-                      width: "100%",
-                      height: "100%",
-                      transform: `translate(-50%, -50%) translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
-                      transformOrigin: 'center',
-                      pointerEvents: 'none',
-                      userSelect: 'none',
+                      backgroundColor: "#292929",
+                      width: 'min(500px, 90vw)',
+                      aspectRatio: '4 / 1',
+                      borderRadius: 3,
+                      border: "dashed #cececeff 1px",
                     }}
-                    draggable={false}
-                  />
-                }
-              </div>
+                  >
+                    {twitterProfileInfo.bannerUrl && (
+                      <img
+                        src={!viewOriginal && asciiBannerPreviewUrl ? asciiBannerPreviewUrl : twitterProfileInfo.bannerUrl}
+                        alt="Twitter banner"
+                        className="absolute top-0 left-0 w-full h-full object-cover"
+                      />
+                    )}
+                    {twitterProfileInfo.profileUrl && (
+                      <div
+                        className="absolute rounded-full overflow-hidden"
+                        style={{
+                          width: '17%',
+                          height: '70%',
+                          left: '4%',
+                          bottom: '-40%',
+                          border: "dashed #cececeff 1px",
+                          marginBottom: '10px'
+                        }}
+                      >
+                        <img
+                          src={!viewOriginal && asciiProfilePreviewUrl ? asciiProfilePreviewUrl : twitterProfileInfo.profileUrl}
+                          alt="Profile"
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
-          } 
-          {twitterProfileInfo && 
-            <div className="flex flex-col gap-9 sm:gap-12">
-              <div className="flex flex-col-reverse justify-center items-center align-center">
+            <div className="flex flex-col mt-6 md:mt-0 md:flex-1 md:max-w-xl gap-4">
+              {twitterProfileInfo && (
+                <div className='flex justify-between items-center align-center mx-auto' style={{width: 'min(500px, 90vw)'}}>
+                  <div className='flex flex-col gap-2 justify-center align-center' style={{maxWidth: "300px"}}>
+                    <span className="text-sm text-gray-400 px-1">profile: @{fetchedTwitterUsername || ''}</span>
+                  </div>
+                  <div className='flex flex-col-reverse flex-end gap-2 justify-center align-center'>
+                    {(asciiProfilePreviewUrl || asciiBannerPreviewUrl) && (
+                      <div className="flex justify-center">
+                        <button
+                          onClick={() => setViewOriginal(viewOriginal => !viewOriginal)}
+                          className="px-1 text-sm text-white justify-end cursor-pointer"
+                        >
+                          {viewOriginal ? "view ascii" : "view original"}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+              {!twitterProfileInfo && (
                 <div
-                  className="relative overflow"
+                  className='flex justify-between items-center align-center mx-auto'
                   style={{
-                    backgroundColor: "#292929",
-                    width: 'min(500px, 90vw)',
-                    aspectRatio: '4 / 1',
-                    borderRadius: 3,
-                    border: "dashed #cececeff 1px",
+                    width: isCheckedTwitterBanner ? "min(500px, 90vw)" : "min(400px, 90vw)",
+                    transition: 'width 0.7s cubic-bezier(.4,0,.2,1), height 0.7s cubic-bezier(.4,0,.2,1)'
                   }}
                 >
-                  {/* Banner Image */}
-                  {twitterProfileInfo.bannerUrl && (
-                    <img
-                      src={!viewOriginal && asciiBannerPreviewUrl ? asciiBannerPreviewUrl : twitterProfileInfo.bannerUrl}
-                      alt="Twitter banner"
-                      className="absolute top-0 left-0 w-full h-full object-cover"
-                    />
-                  )}
-                  
-                  {/* Profile Image - positioned in bottom left, half on banner */}
-                  {twitterProfileInfo.profileUrl && (
-                    <div
-                      className="absolute rounded-full overflow-hidden"
-                      style={{
-                        width: '17%',
-                        height: '70%',
-                        left: '4%',
-                        bottom: '-40%', // Half overlap, responsive to container
-                        border: "dashed #cececeff 1px",
-                        marginBottom: '10px'
-                      }}
-                    >
-                      <img
-                        src={!viewOriginal && asciiProfilePreviewUrl ? asciiProfilePreviewUrl : twitterProfileInfo.profileUrl}
-                        alt="Profile"
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                  )}
-                </div>
-              </div>
-              <div className='flex justify-between items-center align-center mt-0 mx-auto' style={{width: 'min(500px, 90vw)'}}>
-                <div className='flex flex-col gap-2 justify-center align-center' style={{maxWidth: "300px"}}>
-                  <span className="text-sm text-gray-400 px-1">profile: @{fetchedTwitterUsername || ''}</span>
-                </div>
-                <div className='flex flex-col-reverse flex-end gap-2 justify-center align-center'>
-                  {/* Toggle between original and ASCII */}
-                  {(asciiProfilePreviewUrl || asciiBannerPreviewUrl) &&
-                    <div className="flex justify-center">
-                      <button
-                        onClick={() => setViewOriginal(viewOriginal => !viewOriginal)}
-                        className={`px-1 text-sm text-white justify-end cursor-pointer`}
-                      >
-                        {viewOriginal ? "view ascii" : "view original"}
-                      </button>
+                  <div className='flex flex-col gap-2 justify-center align-center' style={{maxWidth: "300px"}}>
+                    <span className="text-sm text-gray-400">File: {displayFile?.name}</span>
+                    <span className="text-sm text-gray-400">File Size: {displayFile ? formatFileSize(displayFile.size) : '0 KB'}</span>
                   </div>
-                  }
+                  <div className='flex flex-col-reverse flex-end gap-2 justify-center align-center'>
+                    {asciiPreviewUrl && (
+                      <div className="flex justify-center">
+                        <button
+                          onClick={() => setViewOriginal(viewOriginal => !viewOriginal)}
+                          className="px-1 text-sm text-white justify-end cursor-pointer"
+                        >
+                          {viewOriginal ? "view ascii" : "view original"}
+                        </button>
+                      </div>
+                    )}
+                    <div className="flex items-center justify-end align-center gap-3">
+                      <button
+                        onClick={() => setZoom(Math.min(zoom + 0.1, 10))}
+                        className="cursor-pointer px-1 text-white rounded text-lg"
+                      >
+                        +
+                      </button>
+                      <button
+                        onClick={() => setZoom(Math.max(zoom - 0.1, 0.5))}
+                        className="cursor-pointer px-1 text-white rounded text-lg"
+                      >
+                        -
+                      </button>
+                      <button
+                        onClick={handleFillContainer}
+                        className="cursor-pointer px-1 text-white rounded text-lg"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                        </svg>
+                      </button>
+                      <button
+                        onClick={resetZoom}
+                        className="cursor-pointer px-1 text-white rounded text-lg"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-          }
-          {!twitterProfileInfo && 
-            <div className='flex justify-between items-center align-center mt-4 mx-auto' style={{width: isCheckedTwitterBanner ? "min(500px, 90vw)" : "min(400px, 90vw)", transition: 'width 0.7s cubic-bezier(.4,0,.2,1), height 0.7s cubic-bezier(.4,0,.2,1)'}}>
-              <div className='flex flex-col gap-2 justify-center align-center' style={{maxWidth: "300px"}}>
-                <span className="text-sm text-gray-400">File: {displayFile?.name}</span>
-                <span className="text-sm text-gray-400">File Size: {displayFile ? formatFileSize(displayFile.size) : '0 KB'}</span>
-              </div>
-              <div className='flex flex-col-reverse flex-end gap-2 justify-center align-center'>
-                {/* Toggle between original and ASCII */}
-                {asciiPreviewUrl &&
-                  <div className="flex justify-center">
-                    <button
-                      onClick={() => setViewOriginal(viewOriginal => !viewOriginal)}
-                      className={`px-1 text-sm text-white justify-end cursor-pointer`}
-                    >
-                      {viewOriginal ? "view ascii" : "view original"}
-                    </button>
+              )}
+              {!twitterProfileInfo && (
+                <div className="flex items-center gap-2 px-1">
+                  <span>resolution: </span>
+                  <Slider
+                    value={[density]}
+                    onValueChange={(value) => setDensity(value[0])}
+                    min={1}
+                    max={10}
+                    step={1}
+                    className="p-4 pr-0"
+                  />
                 </div>
-                }
-                <div className="flex items-center justify-end align-center gap-3" >
-                  <button
-                    onClick={() => setZoom(Math.min(zoom + 0.1, 10))}
-                    className="cursor-pointer px-1 text-white rounded text-lg"
-                  >
-                    +
-                  </button>
-                  <button
-                    onClick={() => setZoom(Math.max(zoom - 0.1, 0.5))}
-                    className="cursor-pointer px-1 text-white rounded text-lg"
-                  >
-                    -
-                  </button>
-                  <button
-                    onClick={handleFillContainer}
-                    className="cursor-pointer px-1 text-white rounded text-lg"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
-                    </svg>
-                  </button>
-                  <button
-                    onClick={resetZoom}
-                    className="cursor-pointer px-1 text-white rounded text-lg"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                    </svg>
-                  </button>
-                </div>
-              </div>
-            </div>
-          }
-          {!twitterProfileInfo && 
-            <div className="flex items-center gap-2 mt-2 px-1">
-              <span>resolution: </span>
-              <Slider
-                value={[density]} // <-- Controlled value
-                onValueChange={(value) => setDensity(value[0])} // <-- Update state
-                min={1}
-                max={10}
-                step={1}
-                className="p-4 pr-0"
-              />
-            </div>
-          }
-          <div className="flex items-center gap-2 mt-2 px-1">
-            <span>contrast: </span>
-            <Slider
-              value={[contrast]} // <-- Controlled value
-              onValueChange={(value) => setContrast(value[0])} // <-- Update state
-              min={1}
-              max={5}
-              step={.5}
-              className="p-4 pr-0"
-            />
-          </div>
-          <div className="flex items-center gap-2 mt-3 px-1">
-            <span>background: </span>
-            <input
-              type="text"
-              value={backgroundColor}
-              onChange={(e) => setBackgroundColor(e.target.value)}
-              className="ml-4 pl-2 py-1 text-white border-b-2 flex-1 w-1"
-              style={{
-                outline: 'none'
-              }}
-              placeholder="#000"
-              pattern="^#[0-9A-Fa-f]{6}$"
-            />
-          </div>
-          <div className="flex items-center gap-6 mt-4 pt-2 px-1">
-            <span>chars: </span>
-              <Dropdown placeholder=".:*-=+%#@" options={[".:*-=+%#@", "⠁⠂⠃⠄⠅⠆⠇", " ░▒▓█"]} value={characterSet} onSelect={(option) => setCharacterSet((option as string))}/>
-          </div>
-          <div className="flex items-center gap-4 mt-4 px-1">
-            <div className="flex items-center gap-2 mt-2">
-              <Checkbox checked={isCheckedColor} onChange={() => setIsCheckedColor(!isCheckedColor)}/>
-              <span>color?</span>
-            </div>
-            {!twitterProfileInfo && 
-              <div className="flex items-center gap-2 mt-3">
-                <Checkbox checked={isCheckedTwitterBanner} onChange={() => setIsCheckedTwitterBanner(!isCheckedTwitterBanner)}/>
-                <span>twitter banner?</span>
-              </div>
-            }
-          </div>
-            <div className='flex flex-col justify-between items-between gap-4 mt-5 mb-6'>
-              <div className='flex flex-row justify-between gap-4'>
-                <button
-                  onClick={handleDownloadImage}
-                  disabled={isDownloadDisabled}
-                  className="cursor-pointer pb-1 text-white transition flex flex-row items-center justify-center gap-2 disabled:opacity-50"
-                >
-                  <span className="text-md">download</span>
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
-                </button>
-              <button
-                onClick={handleGenerateAscii}
-                className="cursor-pointer pb-1 text-white transition flex flex-row items-center justify-center gap-2 disabled:opacity-50"
-              >
-                <span className="text-md">generate</span>
-                <img
-                  src="/gen.svg"
-                  alt="Generate icon"
-                  className="w-4 h-4"
+              )}
+              <div className="flex items-center gap-2 px-1">
+                <span>contrast: </span>
+                <Slider
+                  value={[contrast]}
+                  onValueChange={(value) => setContrast(value[0])}
+                  min={1}
+                  max={5}
+                  step={.5}
+                  className="p-4 pr-0"
                 />
-              </button>
-              <button
-                onClick={handleCopyAscii}
-                disabled={!asciiText}
-                className="cursor-pointer pb-1 text-white transition flex flex-row items-center justify-center gap-2 disabled:opacity-50"
-              >
-                <span className="text-md">{copyState}</span>
-                {copyState === 'copy' ? (
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 28 28">
-                    <rect x="5" y="9" width="10" height="15" rx="2" ry="2" strokeWidth="2" />
-                    <rect x="9" y="5" width="10" height="15" rx="2" ry="2" strokeWidth="2" />
-                  </svg>
-                ) : (
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 28 28">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
+              </div>
+              <div className="flex items-center gap-3 px-1">
+                <span>background: </span>
+                <input
+                  type="text"
+                  value={backgroundColor}
+                  onChange={(e) => setBackgroundColor(e.target.value)}
+                  className="ml-4 pl-2 py-1 text-white border-b-2 flex-1 w-1"
+                  style={{
+                    outline: 'none'
+                  }}
+                  placeholder="#000"
+                  pattern="^#[0-9A-Fa-f]{6}$"
+                />
+              </div>
+              <div className="flex items-center gap-6 pt-2 px-1">
+                <span>chars: </span>
+                <Dropdown placeholder=".:*-=+%#@" options={[".:*-=+%#@", "⠁⠂⠃⠄⠅⠆⠇", " ░▒▓█"]} value={characterSet} onSelect={(option) => setCharacterSet((option as string))}/>
+              </div>
+              <div className="flex items-center gap-4 px-1">
+                <div className="flex items-center gap-2">
+                  <Checkbox checked={isCheckedColor} onChange={() => setIsCheckedColor(!isCheckedColor)}/>
+                  <span>color?</span>
+                </div>
+                {!twitterProfileInfo && (
+                  <div className="flex items-center gap-2">
+                    <Checkbox checked={isCheckedTwitterBanner} onChange={() => setIsCheckedTwitterBanner(!isCheckedTwitterBanner)}/>
+                    <span>twitter banner?</span>
+                  </div>
                 )}
-              </button>
+              </div>
+              <div className='flex flex-col justify-around items-around gap-4 mb-6 px-1'>
+                <div className='flex flex-row justify-between gap-4'>
+                  <button
+                    onClick={handleDownloadImage}
+                    disabled={isDownloadDisabled}
+                    className="cursor-pointer pb-1 text-white transition flex flex-row items-center justify-center gap-2 disabled:opacity-50"
+                  >
+                    <span className="text-md">download</span>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                  </button>
+                  <button
+                    onClick={handleGenerateAscii}
+                    className="cursor-pointer pb-1 text-white transition flex flex-row items-center justify-center gap-2 disabled:opacity-50"
+                  >
+                    <span className="text-md">generate</span>
+                    <img
+                      src="/gen.svg"
+                      alt="Generate icon"
+                      className="w-4 h-4"
+                    />
+                  </button>
+                  <button
+                    onClick={handleCopyAscii}
+                    disabled={!asciiText}
+                    className="cursor-pointer pb-1 text-white transition flex flex-row items-center justify-center gap-2 disabled:opacity-50"
+                  >
+                    <span className="text-md">{copyState}</span>
+                    {copyState === 'copy' ? (
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 28 28">
+                        <rect x="5" y="9" width="10" height="15" rx="2" ry="2" strokeWidth="2" />
+                        <rect x="9" y="5" width="10" height="15" rx="2" ry="2" strokeWidth="2" />
+                      </svg>
+                    ) : (
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 28 28">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                    )}
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
