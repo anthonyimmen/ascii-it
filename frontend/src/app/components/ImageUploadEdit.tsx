@@ -29,6 +29,7 @@ function ImageUploadEdit() {
   const [asciiText, setAsciiText] = useState<string | null>(null);
   const [copyState, setCopyState] = useState<'copy' | 'copied'>('copy');
   const [isFetchingTwitter, setIsFetchingTwitter] = useState(false);
+  const isTwitterFlow = Boolean(twitterProfileInfo);
 
   // Zoom and pan state
   const [zoom, setZoom] = useState(1);
@@ -446,15 +447,27 @@ function ImageUploadEdit() {
       {/* Preview and Controls */}
       {(displayImageUrl || twitterProfileInfo) && (
         <div className="w-full px-4 sm:px-10 mt-3">
-          <div className="flex flex-col md:flex-row md:items-start md:justify-center md:gap-10">
-            <div className="flex flex-col items-center md:items-start md:flex-shrink-0 gap-4">
+          <div
+            className={
+              isTwitterFlow
+                ? 'flex flex-col gap-10'
+                : 'flex flex-col md:flex-row md:items-center md:justify-center md:gap-10'
+            }
+          >
+            <div
+              className={
+                isTwitterFlow
+                  ? 'flex flex-col items-center gap-4'
+                  : 'flex flex-col items-center md:items-start md:flex-shrink-0 gap-4'
+              }
+            >
               {!twitterProfileInfo && displayImageUrl && (
                 <div className="flex flex-col-reverse justify-center items-center align-center gap-2">
                   <div
                     ref={containerRef}
                     className="relative overflow-hidden"
                     style={{
-                      backgroundColor: "#292929",
+                      backgroundColor: "#0e0e0e",
                       width: isCheckedTwitterBanner ? "min(500px, 90vw)" : "min(400px, 90vw)",
                       height: isCheckedTwitterBanner ? "min(125px, 22vh)" : "min(400px, 60vh)",
                       borderRadius: 3,
@@ -512,7 +525,7 @@ function ImageUploadEdit() {
                   <div
                     className="relative overflow"
                     style={{
-                      backgroundColor: "#292929",
+                      backgroundColor: "#0e0e0e",
                       width: 'min(500px, 90vw)',
                       aspectRatio: '4 / 1',
                       borderRadius: 3,
@@ -549,9 +562,20 @@ function ImageUploadEdit() {
                 </div>
               )}
             </div>
-            <div className="flex flex-col mt-6 md:mt-0 md:flex-1 md:max-w-xl gap-4">
+            <div
+              className={
+                isTwitterFlow
+                  ? 'flex flex-col justify-center m-auto align-center gap-4'
+                  : 'flex flex-col mt-6 md:mt-0 md:flex-1 md:max-w-xl gap-4'
+              }
+              style={
+                isTwitterFlow
+                  ? { width: '100%', maxWidth: 'min(500px, 90vw)' }
+                  : undefined
+              }
+            >
               {twitterProfileInfo && (
-                <div className='flex justify-between items-center align-center mx-auto' style={{width: 'min(500px, 90vw)'}}>
+                <div className='flex justify-between items-center align-center mx-auto mt-3' style={{width: 'min(500px, 90vw)'}}>
                   <div className='flex flex-col gap-2 justify-center align-center' style={{maxWidth: "300px"}}>
                     <span className="text-sm text-gray-400 px-1">profile: @{fetchedTwitterUsername || ''}</span>
                   </div>
@@ -679,7 +703,7 @@ function ImageUploadEdit() {
                   </div>
                 )}
               </div>
-              <div className='flex flex-col justify-around items-around gap-4 mb-6 px-1'>
+              <div className='flex flex-col justify-around items-around gap-4 mb-6 mt-3 px-1'>
                 <div className='flex flex-row justify-between gap-4'>
                   <button
                     onClick={handleDownloadImage}

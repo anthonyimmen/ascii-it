@@ -15,7 +15,7 @@ interface CheckboxIconProps {
 export const Checkbox: React.FC<CheckboxIconProps> = ({ 
   checked = false, 
   size = 24, 
-  checkedColor = '#292929', 
+  checkedColor = '#0e0e0e', 
   checkmarkColor = '#ffffff',
   borderRadius = '4px',
   onChange

@@ -28,22 +28,22 @@ export default function Home() {
           overflow: "hidden",
         }}
       >
-        <div style={{ width: '100%', maxWidth: 320, display: 'flex', justifyContent: 'center' }}>
+        <div style={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
           <Image
-            src="/logo.jpeg"
-            alt="Logo"
-            width="320"
-            height="320"
+            src="/logo.svg"
+            alt="ASCII It logo"
+            width="520"
+            height="520"
             style={{
               width: '100%',
               height: 'auto',
-              maxWidth: '320px',
+              maxWidth: '500px',
               display: 'block',
             }}
             priority
           />
         </div>
-        <p style={{ margin: '0.25rem', fontSize: 'clamp(0.875rem, 2.5vw, 1rem)', padding: '1rem 0rem', textAlign: 'center' }}>
+        <p style={{ fontSize: 'clamp(0.875rem, 2.5vw, 1rem)', padding: '0rem 0rem 1rem 0rem', textAlign: 'center' }}>
           just ascii it. convert your twitter or an image to ascii art.
         </p>
         <ImageUploadEdit />
