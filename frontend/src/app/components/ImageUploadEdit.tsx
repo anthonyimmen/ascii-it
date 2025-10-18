@@ -40,6 +40,7 @@ function ImageUploadEdit() {
   const imageRef = useRef<HTMLImageElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+
   // Track latest Twitter fetch to ignore stale responses
   const twitterRequestIdRef = useRef(0);
   // ---------- Helpers ----------
@@ -70,7 +71,6 @@ function ImageUploadEdit() {
   const displayImageUrl = viewOriginal ? previewUrl : (asciiPreviewUrl || previewUrl);
   const displayAsciiPreviewUrl = asciiPreviewUrl;
   const displayFile = viewOriginal ? image : asciiImage;
-
 
   // Cleanup object URLs when they change/unmount
   useEffect(() => {
@@ -543,12 +543,12 @@ function ImageUploadEdit() {
                       <div
                         className="absolute rounded-full overflow-hidden"
                         style={{
-                          width: '17%',
-                          height: '70%',
+                          width: '20%',
+                          height: '80%',
                           left: '4%',
                           bottom: '-40%',
                           border: "dashed #cececeff 1px",
-                          marginBottom: '10px'
+                          marginBottom: '15px'
                         }}
                       >
                         <img
