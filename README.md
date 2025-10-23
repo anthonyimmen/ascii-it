@@ -16,5 +16,4 @@ features include:
 - color / bw
 - background color adjustment
 - character set selector
-- leaderboard w/ upvoting system (coming soon)
 - ascii your twitter profile
