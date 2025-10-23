@@ -48,6 +48,46 @@ export default function Home() {
         </p>
         <ImageUploadEdit />
       </div>
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          padding: '1rem',
+          width: '100%',
+          color: '#ffffff',
+          marginTop: 'auto',
+          fontSize: 'clamp(0.75rem, 2vw, 0.875rem)',
+        }}
+      >
+        <a
+          href="https://x.com/anthonyimmen"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="footerLink"
+        >
+          // by anthonyimmen
+        </a>
+        <a
+          href="https://github.com/anthonyimmen/ascii-it"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="footerLink"
+        >
+          view the code
+        </a>
+      </div>
+      <style jsx>{`
+        .footerLink {
+          color: inherit;
+          text-decoration: none;
+          transition: opacity 0.2s ease;
+        }
+
+        .footerLink:hover {
+          opacity: 0.7;
+        }
+      `}</style>
     </div>
   );
 }
