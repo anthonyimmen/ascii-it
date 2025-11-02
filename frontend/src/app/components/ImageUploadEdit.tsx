@@ -238,42 +238,29 @@ function ImageUploadEdit() {
 
     if (!fileToShare) return;
 
-    try {
-      const shareData: NavigatorShareData = {
-        files: [fileToShare],
-        title: 'ASCII art from ascii-it',
-        text: 'Check out this ASCII art I made with ascii-it! #asciiart'
-      };
-      const navAny = navigator as Navigator & {
-        canShare?: (data: NavigatorShareData) => boolean;
-        share?: (data: NavigatorShareData) => Promise<void>;
-      };
-      if (navAny.canShare?.(shareData)) {
-        await navAny.share?.(shareData);
-        return;
-      }
-    } catch (error) {
-      console.error('Web Share API failed:', error);
-    }
+    let imageCopiedToClipboard = false;
 
-    try {
-      if (
-        navigator.clipboard &&
-        'write' in navigator.clipboard &&
-        typeof window !== 'undefined' &&
-        'ClipboardItem' in window
-      ) {
+    if (
+      typeof window !== 'undefined' &&
+      navigator.clipboard &&
+      'write' in navigator.clipboard &&
+      'ClipboardItem' in window
+    ) {
+      try {
         const clipboardItem = new ClipboardItem({ [fileToShare.type]: fileToShare });
         await navigator.clipboard.write([clipboardItem]);
+        imageCopiedToClipboard = true;
         console.log('ASCII image copied to clipboard. Paste it into the tweet composer.');
+      } catch (clipboardError) {
+        console.error('Failed to copy image to clipboard:', clipboardError);
       }
-    } catch (clipboardError) {
-      console.error('Failed to copy image to clipboard:', clipboardError);
     }
 
-    const tweetText = encodeURIComponent('Check out this ASCII art I made with ascii-it! #asciiart');
-    const tweetUrl = `https://x.com/intent/tweet?text=${tweetText}`;
-    window.open(tweetUrl, '_blank', 'noopener,noreferrer');
+    const tweetUrl = new URL('https://x.com/intent/tweet');
+    const defaultMessage = "(please paste the ascii image copied to clipboard. x doesn't support attaching images via web yet)";
+    tweetUrl.searchParams.set('text', `${defaultMessage}`);
+
+    window.open(tweetUrl.toString(), '_blank', 'noopener,noreferrer');
   }, [asciiImage, asciiProfileImage, asciiBannerImage, twitterProfileInfo, viewOriginal]);
 
   // Helper function to download image from URL
