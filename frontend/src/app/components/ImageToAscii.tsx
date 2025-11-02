@@ -274,7 +274,7 @@ export function imageToAscii(
         density,
         contrast
       );
-      const out = await asciiToImage(rich, backgroundColor, color, image?.name);
+      const out = await asciiToImage(rich, backgroundColor, color, image?.name, 500);
       resolve(out);
     } catch (e) {
       reject(e);

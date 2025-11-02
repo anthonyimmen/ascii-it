@@ -46,7 +46,7 @@ export const downloadImage = (
   if (!ctx) return;
 
   // Prefer device pixel ratio for sharper output
-  const dpr = 2;
+  const dpr = 6;
   // Improve crispness when scaling text-like images
   ctx.imageSmoothingEnabled = false;
 
