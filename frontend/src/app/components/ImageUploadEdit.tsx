@@ -229,6 +229,53 @@ function ImageUploadEdit() {
     }
   }, [zoom, pan, image, backgroundColor, displayImageUrl, twitterProfileInfo, viewOriginal, asciiProfileImage, asciiBannerImage, asciiProfilePreviewUrl, asciiBannerPreviewUrl]);
 
+  const handleShareImage = useCallback(async () => {
+    if (viewOriginal) return;
+
+    const fileToShare = twitterProfileInfo
+      ? asciiProfileImage || asciiBannerImage
+      : asciiImage;
+
+    if (!fileToShare) return;
+
+    try {
+      const shareData: NavigatorShareData = {
+        files: [fileToShare],
+        title: 'ASCII art from ascii-it',
+        text: 'Check out this ASCII art I made with ascii-it! #asciiart'
+      };
+      const navAny = navigator as Navigator & {
+        canShare?: (data: NavigatorShareData) => boolean;
+        share?: (data: NavigatorShareData) => Promise<void>;
+      };
+      if (navAny.canShare?.(shareData)) {
+        await navAny.share?.(shareData);
+        return;
+      }
+    } catch (error) {
+      console.error('Web Share API failed:', error);
+    }
+
+    try {
+      if (
+        navigator.clipboard &&
+        'write' in navigator.clipboard &&
+        typeof window !== 'undefined' &&
+        'ClipboardItem' in window
+      ) {
+        const clipboardItem = new ClipboardItem({ [fileToShare.type]: fileToShare });
+        await navigator.clipboard.write([clipboardItem]);
+        console.log('ASCII image copied to clipboard. Paste it into the tweet composer.');
+      }
+    } catch (clipboardError) {
+      console.error('Failed to copy image to clipboard:', clipboardError);
+    }
+
+    const tweetText = encodeURIComponent('Check out this ASCII art I made with ascii-it! #asciiart');
+    const tweetUrl = `https://x.com/intent/tweet?text=${tweetText}`;
+    window.open(tweetUrl, '_blank', 'noopener,noreferrer');
+  }, [asciiImage, asciiProfileImage, asciiBannerImage, twitterProfileInfo, viewOriginal]);
+
   // Helper function to download image from URL
   const downloadImageFromUrl = (url: string, filename: string) => {
     const a = document.createElement('a');
@@ -389,6 +436,7 @@ function ImageUploadEdit() {
   const isDownloadDisabled = viewOriginal || (twitterProfileInfo
     ? !(asciiProfileImage || asciiBannerImage)
     : !asciiImage);
+  const isShareDisabled = isDownloadDisabled;
 
   return (
     <div 
@@ -714,6 +762,18 @@ function ImageUploadEdit() {
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
+                  </button>
+                  <button
+                    onClick={handleShareImage}
+                    disabled={isShareDisabled}
+                    className="cursor-pointer pb-1 text-white transition flex flex-row items-center justify-center gap-2 disabled:opacity-50"
+                  >
+                    <span className="text-md">share</span>
+                    <img
+                      src="/share.svg"
+                      alt="Share icon"
+                      className="w-4 h-4"
+                    />
                   </button>
                   <button
                     onClick={handleGenerateAscii}
