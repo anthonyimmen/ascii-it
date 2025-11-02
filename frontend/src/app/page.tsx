@@ -43,7 +43,16 @@ export default function Home() {
             priority
           />
         </div>
-        <p style={{ fontSize: 'clamp(0.875rem, 2.5vw, 1rem)', padding: '0rem 0rem 1rem 0rem', textAlign: 'center' }}>
+        <p
+          style={{
+            fontSize: 'clamp(0.875rem, 2.5vw, 1rem)',
+            padding: '0 1.25rem 1rem',
+            textAlign: 'center',
+            margin: '0 auto',
+            maxWidth: 'min(32rem, 92vw)',
+            overflowWrap: 'anywhere'
+          }}
+        >
           just ascii it. convert your twitter or an image to ascii art.
         </p>
         <ImageUploadEdit />
