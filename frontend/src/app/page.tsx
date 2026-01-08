@@ -28,7 +28,7 @@ export default function Home() {
           overflow: "hidden",
         }}
       >
-        <div style={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
+        <div style={{ width: '100%', maxWidth: '500px', display: 'flex', justifyContent: 'center' }}>
           <Image
             src="/logo.svg"
             alt="ASCII It logo"
@@ -37,7 +37,6 @@ export default function Home() {
             style={{
               width: '100%',
               height: 'auto',
-              maxWidth: '500px',
               display: 'block',
             }}
             priority

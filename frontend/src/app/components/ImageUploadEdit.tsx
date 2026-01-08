@@ -232,11 +232,13 @@ function ImageUploadEdit() {
   const handleShareImage = useCallback(async () => {
     if (viewOriginal) return;
 
-    const fileToShare = twitterProfileInfo
-      ? asciiProfileImage || asciiBannerImage
-      : asciiImage;
+    const filesToShare = twitterProfileInfo
+      ? [asciiProfileImage, asciiBannerImage].filter((file): file is File => Boolean(file))
+      : asciiImage
+        ? [asciiImage]
+        : [];
 
-    if (!fileToShare) return;
+    if (filesToShare.length === 0) return;
 
     let imageCopiedToClipboard = false;
 
@@ -247,18 +249,26 @@ function ImageUploadEdit() {
       'ClipboardItem' in window
     ) {
       try {
-        const clipboardItem = new ClipboardItem({ [fileToShare.type]: fileToShare });
-        await navigator.clipboard.write([clipboardItem]);
+        const clipboardItems = filesToShare.map(
+          (file) => new ClipboardItem({ [file.type]: file })
+        );
+        await navigator.clipboard.write(clipboardItems);
         imageCopiedToClipboard = true;
-        console.log('ASCII image copied to clipboard. Paste it into the tweet composer.');
+        console.log('ASCII images copied to clipboard. Paste them into the tweet composer.');
       } catch (clipboardError) {
         console.error('Failed to copy image to clipboard:', clipboardError);
       }
     }
 
     const tweetUrl = new URL('https://x.com/intent/tweet');
-    const defaultMessage = "(please paste the ascii image copied to clipboard. x doesn't support attaching images via web yet)";
-    tweetUrl.searchParams.set('text', `${defaultMessage}`);
+    const defaultMessage = 'Check out this ASCII art I made with ascii-it! #asciiart';
+    const attachmentLabel = filesToShare.length > 1 ? 'ASCII images' : 'ASCII image';
+    const clipboardHint = imageCopiedToClipboard
+      ? `\n\n(I copied the ${attachmentLabel} to my clipboard—pasting ${
+          filesToShare.length > 1 ? 'them' : 'it'
+        } now!)`
+      : `\n\n(I\'ll attach the ${attachmentLabel} next.)`;
+    tweetUrl.searchParams.set('text', `${defaultMessage}${clipboardHint}`);
 
     window.open(tweetUrl.toString(), '_blank', 'noopener,noreferrer');
   }, [asciiImage, asciiProfileImage, asciiBannerImage, twitterProfileInfo, viewOriginal]);
